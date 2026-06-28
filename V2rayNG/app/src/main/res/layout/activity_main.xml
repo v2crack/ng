@@ -5,126 +5,113 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fitsSystemWindows="true"
-        android:orientation="vertical">
+        android:fitsSystemWindows="true">
 
-        <com.google.android.material.appbar.AppBarLayout
+        <!-- ViewPager2 + ProgressBar -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/progress_bar"
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize" />
+                android:layout_height="wrap_content"
+                android:indeterminate="true"
+                android:visibility="invisible"
+                app:indicatorColor="@color/color_fab_active" />
 
-        </com.google.android.material.appbar.AppBarLayout>
+<androidx.viewpager2.widget.ViewPager2
+    android:id="@+id/view_pager"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:nextFocusRight="@+id/fab"
+    android:scrollbars="vertical" />
 
-        <RelativeLayout
+        </LinearLayout>
+
+        <!-- Toolbar -->
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="?attr/actionBarSize"
+            android:background="#CC000000"
+            android:elevation="4dp"
+            app:titleTextColor="@android:color/white" />
 
-            <androidx.coordinatorlayout.widget.CoordinatorLayout
-                android:id="@+id/main_content"
+        <!-- TabLayout -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="?attr/actionBarSize"
+            android:background="#CC000000"
+            android:elevation="4dp"
+            app:tabIndicatorFullWidth="false"
+            app:tabMode="scrollable"
+            app:tabTextAppearance="@style/TabLayoutTextStyle" />
+
+        <!-- Нижняя панель -->
+        <LinearLayout
+            android:id="@+id/layout_test"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/view_height_dp64"
+            android:layout_gravity="bottom"
+            android:background="#CC000000"
+            android:elevation="4dp"
+            android:clickable="true"
+            android:contentDescription="@string/connection_test_pending"
+            android:focusable="true"
+            android:orientation="vertical">
+
+            <View
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="1dp"
+                android:background="@color/divider_color_light" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
+            <TextView
+                android:id="@+id/tv_test_state"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="start|center"
+                android:maxLines="2"
+                android:minLines="1"
+                android:paddingStart="@dimen/padding_spacing_dp16"
+                android:text="@string/connection_test_pending"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textColor="@android:color/white" />
 
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:id="@+id/progress_bar"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:indeterminate="true"
-                        android:visibility="invisible"
-                        app:indicatorColor="@color/color_fab_active" />
+        </LinearLayout>
 
-                    <com.google.android.material.tabs.TabLayout
-                        android:id="@+id/tab_group"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:tabIndicatorFullWidth="false"
-                        app:tabMode="scrollable"
-                        app:tabTextAppearance="@style/TabLayoutTextStyle" />
+        <!-- FAB -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="@dimen/padding_spacing_dp16"
+            android:layout_marginBottom="@dimen/view_height_dp64"
+            android:clickable="true"
+            android:contentDescription="@string/tasker_start_service"
+            android:focusable="true"
+            android:src="@drawable/ic_play_24dp"
+            app:tint="@color/colorWhite"
+            app:useCompatPadding="true" />
 
-                    <androidx.viewpager2.widget.ViewPager2
-                        android:id="@+id/view_pager"
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:nextFocusRight="@+id/fab"
-                        android:scrollbars="vertical"
-                        android:layout_weight="1" />
+    </FrameLayout>
 
-                    <LinearLayout
-                        android:id="@+id/layout_test"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/view_height_dp64"
-                        android:clickable="true"
-                        android:contentDescription="@string/connection_test_pending"
-                        android:focusable="true"
-                        android:nextFocusLeft="@+id/view_pager"
-                        android:nextFocusRight="@+id/fab"
-                        android:orientation="vertical">
-
-                        <View
-                            android:layout_width="wrap_content"
-                            android:layout_height="1dp"
-                            android:background="@color/divider_color_light" />
-
-                        <TextView
-                            android:id="@+id/tv_test_state"
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:gravity="start|center"
-                            android:maxLines="2"
-                            android:minLines="1"
-                            android:paddingStart="@dimen/padding_spacing_dp16"
-                            android:text="@string/connection_test_pending"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Small" />
-
-                    </LinearLayout>
-                </LinearLayout>
-
-                <FrameLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|end"
-                    android:layout_marginBottom="-16dp"
-                    android:layout_marginEnd="@dimen/padding_spacing_dp16">
-
-                    <com.google.android.material.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/fab"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom|end"
-                        android:layout_marginBottom="@dimen/view_height_dp36"
-                        android:clickable="true"
-                        android:contentDescription="@string/tasker_start_service"
-                        android:focusable="true"
-                        android:nextFocusLeft="@+id/layout_test"
-                        android:src="@drawable/ic_play_24dp"
-                        app:tint="@color/colorWhite"
-                        app:useCompatPadding="true"
-                        app:layout_anchorGravity="bottom|right|end" />
-
-                </FrameLayout>
-            </androidx.coordinatorlayout.widget.CoordinatorLayout>
-        </RelativeLayout>
-    </LinearLayout>
-
+    <!-- Navigation Drawer -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
+        android:background="#CC000000"
+        android:elevation="64dp"
         app:headerLayout="@layout/nav_header"
-        app:menu="@menu/menu_drawer">
-
-    </com.google.android.material.navigation.NavigationView>
+        app:menu="@menu/menu_drawer" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

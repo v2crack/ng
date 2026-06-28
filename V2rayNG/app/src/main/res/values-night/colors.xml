@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="color_fab_active">#f97910</color>
+    <color name="color_fab_active">#A8A8A8</color>  <!-- тёмно-серебристый (было #f97910) -->
     <color name="color_fab_inactive">#646464</color>
     <color name="divider_color_light">#424242</color>
 
@@ -10,11 +10,11 @@
     <color name="md_theme_primaryContainer">#474747</color>
     <color name="md_theme_onPrimaryContainer">#E0E0E0</color>
 
-    <!-- Secondary colors - accent color: orange -->
-    <color name="md_theme_secondary">#FFB687</color>
-    <color name="md_theme_onSecondary">#4E2600</color>
-    <color name="md_theme_secondaryContainer">#6F3800</color>
-    <color name="md_theme_onSecondaryContainer">#FFE8D6</color>
+    <!-- Secondary colors - accent color: silver -->
+    <color name="md_theme_secondary">#C0C0C0</color>
+    <color name="md_theme_onSecondary">#303030</color>
+    <color name="md_theme_secondaryContainer">#6A6A6A</color>
+    <color name="md_theme_onSecondaryContainer">#E8E8E8</color>
 
     <!-- Tertiary colors - tertiary color: green -->
     <color name="md_theme_tertiary">#83D6B5</color>

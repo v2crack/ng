@@ -10,6 +10,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.ItemTouchHelper
+import android.graphics.Rect
+import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.R
@@ -66,6 +68,24 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
         }
         addCustomDividerToRecyclerView(binding.recyclerView, R.drawable.custom_divider)
         binding.recyclerView.adapter = adapter
+
+    binding.recyclerView.addItemDecoration(object : RecyclerView.ItemDecoration() {
+        override fun getItemOffsets(
+            outRect: Rect,
+            view: View,
+            parent: RecyclerView,
+            state: RecyclerView.State
+        ) {
+            val position = parent.getChildAdapterPosition(view)
+            if (position == 0) {
+                val toolbarHeight = resources.getDimensionPixelSize(androidx.appcompat.R.dimen.abc_action_bar_default_height_material)
+                val tabHeight = (48 * resources.displayMetrics.density).toInt()
+                outRect.top = toolbarHeight + tabHeight + 20
+            } else {
+                outRect.top = 0
+            }
+        }
+    })
 
         itemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter, allowSwipe = false))
         itemTouchHelper?.attachToRecyclerView(binding.recyclerView)

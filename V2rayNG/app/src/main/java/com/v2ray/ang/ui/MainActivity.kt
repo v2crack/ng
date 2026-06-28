@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -18,6 +19,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
+import android.graphics.Rect
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.tabs.TabLayoutMediator
 import com.v2ray.ang.AppConfig
@@ -72,6 +75,8 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         // setup viewpager and tablayout
         groupPagerAdapter = GroupPagerAdapter(this, emptyList())
         binding.viewPager.adapter = groupPagerAdapter
+
+
         binding.viewPager.isUserInputEnabled = true
 
         // setup navigation drawer
