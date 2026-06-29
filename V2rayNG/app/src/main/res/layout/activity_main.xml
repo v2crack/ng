@@ -29,7 +29,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:nextFocusRight="@+id/fab"
-    android:scrollbars="vertical" />
+    android:scrollbars="vertical" 
+    android:background="@color/md_theme_background_real_other" />
 
         </LinearLayout>
 

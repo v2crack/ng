@@ -1,28 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/item_bg"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical">
+    android:layout_marginHorizontal="@dimen/padding_spacing_dp8"
+    android:layout_marginVertical="@dimen/padding_spacing_dp4"
+    app:cardCornerRadius="10dp"
+    app:cardBackgroundColor="#FF1C1B1F"
+    app:cardElevation="0dp"
+    app:cardPreventCornerOverlap="false">
 
     <LinearLayout
-        android:id="@+id/info_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:gravity="center"
-        android:nextFocusRight="@+id/layout_share"
         android:orientation="horizontal"
-        android:paddingStart="@dimen/padding_spacing_dp4"
-        android:paddingTop="@dimen/padding_spacing_dp8"
-        android:paddingEnd="@dimen/padding_spacing_dp4"
-        android:paddingBottom="@dimen/padding_spacing_dp8">
+        android:gravity="center_vertical">
 
+        <!-- Индикатор слева -->
         <LinearLayout
             android:id="@+id/layout_indicator"
             android:layout_width="@dimen/padding_spacing_dp4"
@@ -30,80 +27,41 @@
             android:layout_gravity="center"
             android:orientation="vertical" />
 
+        <!-- Кликабельный контент -->
         <LinearLayout
+            android:id="@+id/info_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:clickable="true"
+            android:focusable="true"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/padding_spacing_dp4"
+            android:paddingTop="@dimen/padding_spacing_dp8"
+            android:paddingEnd="@dimen/padding_spacing_dp4"
+            android:paddingBottom="@dimen/padding_spacing_dp8">
 
+            <!-- Строка 1: Название + кнопки -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-                <LinearLayout
+                <TextView
+                    android:id="@+id/tv_name"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    android:maxLines="2"
+                    android:minLines="1"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+                    android:paddingStart="@dimen/padding_spacing_dp4"
+                    android:paddingEnd="@dimen/padding_spacing_dp8" />
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:paddingStart="@dimen/padding_spacing_dp8">
-
-                        <TextView
-                            android:id="@+id/tv_name"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:maxLines="2"
-                            android:minLines="1"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:paddingTop="@dimen/padding_spacing_dp8">
-
-                            <androidx.constraintlayout.widget.ConstraintLayout
-                                android:id="@+id/layout_subscription"
-                                android:layout_width="@dimen/image_size_dp24"
-                                android:layout_height="@dimen/image_size_dp24"
-                                android:layout_gravity="bottom"
-                                android:layout_marginEnd="@dimen/padding_spacing_dp4"
-                                android:background="@drawable/ic_circle">
-
-                                <TextView
-                                    android:id="@+id/tv_subscription"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                                    android:textSize="11sp"
-                                    app:layout_constraintBottom_toBottomOf="parent"
-                                    app:layout_constraintEnd_toEndOf="parent"
-                                    app:layout_constraintStart_toStartOf="parent"
-                                    app:layout_constraintTop_toTopOf="parent" 
-                                    android:visibility="gone" />
-                            </androidx.constraintlayout.widget.ConstraintLayout>
-
-                            <TextView
-                                android:id="@+id/tv_statistics"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:lines="1"
-                                android:textAppearance="@style/TextAppearance.AppCompat.Small" />
-
-                        </LinearLayout>
-
-                    </LinearLayout>
-
-                </LinearLayout>
-
+                <!-- Кнопки -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center"
                     android:orientation="horizontal">
 
                     <LinearLayout
@@ -115,15 +73,13 @@
                         android:contentDescription="@string/title_configuration_share"
                         android:focusable="true"
                         android:gravity="center"
-                        android:nextFocusLeft="@+id/info_container"
                         android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp8">
+                        android:padding="@dimen/padding_spacing_dp4">
 
                         <ImageView
                             android:layout_width="wrap_content"
                             android:layout_height="@dimen/image_size_dp24"
                             app:srcCompat="@drawable/ic_share_24dp" />
-
                     </LinearLayout>
 
                     <LinearLayout
@@ -136,13 +92,12 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp8">
+                        android:padding="@dimen/padding_spacing_dp4">
 
                         <ImageView
                             android:layout_width="@dimen/image_size_dp24"
                             android:layout_height="@dimen/image_size_dp24"
                             app:srcCompat="@drawable/ic_edit_24dp" />
-
                     </LinearLayout>
 
                     <LinearLayout
@@ -155,13 +110,12 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp8">
+                        android:padding="@dimen/padding_spacing_dp4">
 
                         <ImageView
                             android:layout_width="@dimen/image_size_dp24"
                             android:layout_height="@dimen/image_size_dp24"
                             app:srcCompat="@drawable/ic_delete_24dp" />
-
                     </LinearLayout>
 
                     <LinearLayout
@@ -174,37 +128,90 @@
                         android:focusable="true"
                         android:gravity="center"
                         android:orientation="vertical"
-                        android:padding="@dimen/padding_spacing_dp8">
+                        android:padding="@dimen/padding_spacing_dp4">
 
                         <ImageView
                             android:layout_width="@dimen/image_size_dp24"
                             android:layout_height="@dimen/image_size_dp24"
                             app:srcCompat="@drawable/ic_more_vert_24dp" />
-
                     </LinearLayout>
+
                 </LinearLayout>
 
             </LinearLayout>
 
+            <!-- Строка 2: Протокол + Адрес + Подписка + Пинг -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:paddingStart="@dimen/padding_spacing_dp8"
-                android:paddingTop="@dimen/padding_spacing_dp8"
-                android:paddingEnd="@dimen/padding_spacing_dp8">
+                android:gravity="center_vertical"
+                android:paddingStart="@dimen/padding_spacing_dp4"
+                android:paddingTop="@dimen/padding_spacing_dp4"
+                android:paddingEnd="@dimen/padding_spacing_dp4"
+                android:paddingBottom="0dp">
 
                 <TextView
                     android:id="@+id/tv_type"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:lines="1"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textColor="@color/colorConfigType"
                     android:textSize="11sp"
+                    android:background="@drawable/bg_rounded"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="2dp"
                     tools:text="VLESS" />
 
+                <TextView
+                    android:id="@+id/tv_statistics"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:lines="1"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                    android:textSize="11sp"
+                    android:layout_marginStart="@dimen/padding_spacing_dp8"
+                    android:layout_marginEnd="@dimen/padding_spacing_dp8"
+                    android:background="@drawable/bg_rounded"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="2dp"
+                    tools:text="192.168.1.1:443" />
+
+                <!-- Подписка -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginEnd="@dimen/padding_spacing_dp8">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/layout_subscription"
+                        android:layout_width="@dimen/image_size_dp24"
+                        android:layout_height="@dimen/image_size_dp24"
+                        android:background="@drawable/ic_circle">
+
+                        <TextView
+                            android:id="@+id/tv_subscription"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                            android:textSize="11sp"
+                            android:visibility="gone"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </LinearLayout>
+
+                <!-- Растяжка -->
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <!-- Пинг -->
                 <TextView
                     android:id="@+id/tv_test_result"
                     android:layout_width="wrap_content"
@@ -213,6 +220,9 @@
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textColor="@color/colorPing"
                     android:textSize="11sp"
+                    android:background="@drawable/bg_rounded"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="2dp"
                     tools:text="214ms" />
 
             </LinearLayout>
@@ -220,5 +230,4 @@
         </LinearLayout>
 
     </LinearLayout>
-
-</LinearLayout>
+</androidx.cardview.widget.CardView>

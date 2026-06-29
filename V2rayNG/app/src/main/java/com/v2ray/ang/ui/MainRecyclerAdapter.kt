@@ -53,7 +53,7 @@ class MainRecyclerAdapter(
             val guid = data[position].guid
             val profile = data[position].profile
 
-            holder.itemView.setBackgroundColor(Color.TRANSPARENT)
+            // holder.itemView.setBackgroundColor(Color.TRANSPARENT)
 
             //Name address
             holder.itemMainBinding.tvName.text = profile.remarks
@@ -196,7 +196,7 @@ holder.itemMainBinding.tvTestResult.setTextColor(color)
         }
 
         fun onItemClear() {
-            itemView.setBackgroundColor(0)
+            itemView.setBackgroundColor(ContextCompat.getColor(itemView.context, R.color.md_theme_surface_real))
         }
     }
 
