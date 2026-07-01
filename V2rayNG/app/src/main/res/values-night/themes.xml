@@ -6,6 +6,15 @@
         <!-- Night mode specific overrides -->
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
+        <item name="android:fontFamily">@font/russoone</item>
+        <item name="fontFamily">@font/russoone</item>
+        <item name="alertDialogTheme">@style/RoundedAlertDialog</item>
     </style>
-
+    <style name="RoundedAlertDialog" parent="Theme.Material3.DayNight.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_rounded_background</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:windowMinWidthMajor">85%</item>
+        <item name="android:windowMinWidthMinor">85%</item>
+    </style>
 </resources>
