@@ -1350,15 +1350,41 @@ object V2rayConfigManager {
                 streamSettings.httpupgradeSettings = httpupgradeSetting
             }
 
-            NetworkType.XHTTP.type -> {
-                val xhttpSetting = StreamSettingsBean.XhttpSettingsBean()
-                xhttpSetting.host = host.orEmpty()
-                sni = host
-                xhttpSetting.path = path ?: "/"
-                xhttpSetting.mode = xhttpMode
-                xhttpSetting.extra = JsonUtil.parseString(xhttpExtra)
-                streamSettings.xhttpSettings = xhttpSetting
-            }
+// handler/V2rayConfigManager.kt
+NetworkType.XHTTP.type -> {
+    val xhttpSetting = StreamSettingsBean.XhttpSettingsBean()
+    xhttpSetting.host = host.orEmpty()
+    sni = host
+    xhttpSetting.path = path ?: "/"
+    xhttpSetting.mode = xhttpMode
+    
+    // ========== ЧИТАЕМ НАСТРОЙКУ XMUX ==========
+    val xmuxEnabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_XMUX_ENABLED, false)
+    
+    if (xmuxEnabled) {
+        // Берем существующий extra или создаем новый
+        val extraObj = if (!xhttpExtra.isNullOrEmpty()) {
+            JsonUtil.parseString(xhttpExtra) ?: com.google.gson.JsonObject()
+        } else {
+            com.google.gson.JsonObject()
+        }
+        
+        // Добавляем xmux с maxConcurrency = 1
+        val xmuxObj = JsonUtil.parseString("""{"maxConcurrency":"1"}""")
+        extraObj.add("xmux", xmuxObj)
+        xhttpSetting.extra = extraObj
+    } else {
+        // Если выключено — оставляем как есть
+        xhttpSetting.extra = if (!xhttpExtra.isNullOrEmpty()) {
+            JsonUtil.parseString(xhttpExtra)
+        } else {
+            null
+        }
+    }
+    // ===========================================
+    
+    streamSettings.xhttpSettings = xhttpSetting
+}
 
             NetworkType.H2.type, NetworkType.HTTP.type -> {
                 streamSettings.network = NetworkType.H2.type

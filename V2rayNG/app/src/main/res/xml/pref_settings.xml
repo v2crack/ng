@@ -241,6 +241,17 @@
             android:title="@string/title_pref_mux_xudp_quic" />
     </PreferenceCategory>
 
+<!-- Добавьте после категории Fragment -->
+<PreferenceCategory
+    android:title="XMUX Settings"
+    app:initialExpandedChildrenCount="0">
+    <CheckBoxPreference
+        android:key="pref_xmux_enabled"
+        android:title="Enable XMUX"
+        android:summary="Limit XHTTP multiplexing to 1 connection"
+        android:defaultValue="false" />
+</PreferenceCategory>
+
     <PreferenceCategory
         android:title="@string/title_fragment_settings"
         app:initialExpandedChildrenCount="0">
