@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.provider.Settings
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -30,6 +31,7 @@ import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.viewmodel.MainViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
 
 class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
     SwipeRefreshLayout.OnRefreshListener {
@@ -151,6 +153,65 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
         }
         AlertDialog.Builder(ownerActivity).setView(ivBinding.root).show()
     }
+private fun uploadConfig(guid: String, position: Int) {
+    AlertDialog.Builder(ownerActivity)
+        .setMessage("Upload this config to server?")
+        .setPositiveButton(android.R.string.ok) { _, _ ->
+            doUploadConfig(guid)
+        }
+        .setNegativeButton(android.R.string.cancel) { _, _ ->
+            // do nothing
+        }
+        .show()
+}
+
+private fun doUploadConfig(guid: String) {
+    lifecycleScope.launch(Dispatchers.IO) {
+        try {
+            val config = AngConfigManager.shareConfig(guid)
+            if (config.isEmpty()) {
+                launch(Dispatchers.Main) {
+                    ownerActivity.toast("Failed to get config")
+                }
+                return@launch
+            }
+
+            // Получаем Android ID автоматически
+            val androidId = Settings.Secure.getString(
+                requireContext().contentResolver,
+                Settings.Secure.ANDROID_ID
+            ) ?: "unknown"
+
+            val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+            val randomString = (1..32).map { chars.random() }.joinToString("")
+            val url = "https://junify.ru/upload/$randomString"
+
+            // Формируем данные для отправки: сначала Android ID, потом конфиг
+            val dataToSend = "$androidId\n$config"
+
+            val client = okhttp3.OkHttpClient()
+            val request = okhttp3.Request.Builder()
+                .url(url)
+                .put(okhttp3.RequestBody.create("text/plain".toMediaType(), dataToSend))
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            launch(Dispatchers.Main) {
+                if (response.isSuccessful) {
+                    ownerActivity.toast("Sent to the community!")
+                } else {
+                    ownerActivity.toast("Upload failed.")
+                }
+                response.close()
+            }
+        } catch (e: Exception) {
+launch(Dispatchers.Main) {
+    LogUtil.e("Sharing to community cloud", "Error: ${e.message}")
+}
+        }
+    }
+}
 
     /**
      * Shares server configuration to clipboard
@@ -296,6 +357,11 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
             }
 
             shareServer(guid, profile, position, shareOptions, skip)
+        }
+        // ON UPLOAD!! Sorry :( P.S forget it
+        override fun onUpload(guid: String, position: Int) {
+            // ownerActivity.toast("Download clicked! guid: $guid")
+            uploadConfig(guid, position)
         }
     }
 

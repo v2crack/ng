@@ -69,7 +69,7 @@ class UserAssetActivity : HelperBaseActivity() {
         R.id.add_file -> showFileChooser().let { true }
         R.id.add_url -> startActivity(Intent(this, UserAssetUrlActivity::class.java)).let { true }
         R.id.add_qrcode -> importAssetFromQRcode().let { true }
-        R.id.download_file -> downloadGeoFiles().let { true }
+        R.id.upload_file -> downloadGeoFiles().let { true }
         else -> super.onOptionsItemSelected(item)
     }
 

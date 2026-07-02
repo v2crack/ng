@@ -21,8 +21,8 @@
         </menu>
     </item>
     <item
-        android:id="@+id/download_file"
-        android:icon="@drawable/ic_cloud_download_24dp"
+        android:id="@+id/upload_file"
+        android:icon="@drawable/ic_cloud_upload_24dp"
         android:title="@string/menu_item_download_file"
         app:showAsAction="ifRoom" />
 </menu>

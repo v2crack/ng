@@ -10,4 +10,6 @@ interface MainAdapterListener : BaseAdapterListener {
 
     fun onShare(guid: String, profile: ProfileItem, position: Int, more: Boolean)
 
+    fun onUpload(guid: String, position: Int)  // ДОБАВИТЬ ЭТУ СТРОКУ
+
 }

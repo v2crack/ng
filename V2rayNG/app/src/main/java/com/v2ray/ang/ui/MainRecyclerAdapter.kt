@@ -115,6 +115,12 @@ holder.itemMainBinding.tvTestResult.setTextColor(color)
                 holder.itemMainBinding.layoutRemove.visibility = View.VISIBLE
                 holder.itemMainBinding.layoutMore.visibility = View.GONE
 
+// Делаем кнопку видимой (на всякий случай)
+holder.itemMainBinding.layoutUpload.visibility = View.VISIBLE
+holder.itemMainBinding.layoutUpload.setOnClickListener {
+    adapterListener?.onUpload(guid, position)
+}
+
                 holder.itemMainBinding.layoutShare.setOnClickListener {
                     adapterListener?.onShare(guid, profile, position, false)
                 }
