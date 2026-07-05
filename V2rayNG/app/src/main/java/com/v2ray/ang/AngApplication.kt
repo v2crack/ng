@@ -15,14 +15,30 @@ import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import com.v2ray.ang.dto.SubscriptionItem
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsManager
+import com.v2ray.ang.ui.MainActivity
 import kotlinx.coroutines.*
 import org.json.JSONObject
 import java.util.Locale
 
 class AngApplication : MultiDexApplication() {
-    companion object {
-        lateinit var application: AngApplication
+companion object {
+    lateinit var application: AngApplication
+    private val subscriptionListeners = mutableListOf<SubscriptionUpdateListener>()
+
+    fun addSubscriptionListener(listener: SubscriptionUpdateListener) {
+        if (!subscriptionListeners.contains(listener)) {
+            subscriptionListeners.add(listener)
+        }
     }
+
+    fun removeSubscriptionListener(listener: SubscriptionUpdateListener) {
+        subscriptionListeners.remove(listener)
+    }
+
+    private fun notifySubscriptionUpdated() {
+        subscriptionListeners.forEach { it.onSubscriptionUpdated() }
+    }
+}
 
     override fun attachBaseContext(base: Context?) {
         super.attachBaseContext(base)
@@ -180,9 +196,11 @@ private fun createPermanentGroup() {
                 val result = com.v2ray.ang.handler.AngConfigManager.updateConfigViaSub(
                     com.v2ray.ang.dto.SubscriptionCache(permanentGroupId, group)
                 )
-                withContext(Dispatchers.Main) {
-                    android.util.Log.d("AngApplication", "Subscription updated: ${result.configCount} configs")
-                }
+withContext(Dispatchers.Main) {
+    android.util.Log.d("AngApplication", "Subscription updated: ${result.configCount} configs")
+    // Уведомляем всех слушателей
+    notifySubscriptionUpdated()
+}
             } catch (e: Exception) {
                 android.util.Log.e("AngApplication", "Failed to auto-update subscription", e)
             }

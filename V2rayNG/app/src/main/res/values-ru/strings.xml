@@ -286,7 +286,7 @@
     <string name="title_del_duplicate_config">Удалить дубликаты профилей</string>
     <string name="title_del_invalid_config">Удалить нерабочие профили</string>
     <string name="title_export_all">Экспорт профилей в буфер обмена</string>
-    <string name="title_sub_setting">Группы</string>
+    <string name="title_sub_setting">Подписки</string>
     <string name="sub_setting_remarks">Название</string>
     <string name="sub_setting_url">URL (необязательно)</string>
     <string name="sub_setting_user_agent">User Agent</string>
@@ -298,11 +298,11 @@
     <string name="sub_setting_next_profile">Следующий профиль прокси</string>
     <string name="sub_setting_pre_profile_tip">Профиль должен быть уникальным</string>
     <string name="title_sub_update">Обновить подписку</string>
-    <string name="title_ping_all_server">Проверить профили</string>
-    <string name="title_real_ping_all_server_x5">Проверить профили x5</string>
-    <string name="title_real_ping_all_server_x10">Проверить профили x10</string>
-    <string name="title_real_ping_all_server_x30">Проверить профили x30</string>
-    <string name="title_real_ping_all_server">Проверить задержку профилей</string>
+    <string name="title_ping_all_server">Пинг профилей</string>
+    <string name="title_real_ping_all_server_x5">Пинг профилей x5</string>
+    <string name="title_real_ping_all_server_x10">Пинг профилей x10</string>
+    <string name="title_real_ping_all_server_x30">Пинг профилей x30</string>
+    <string name="title_real_ping_all_server">Проверить пинг профилей</string>
     <string name="title_user_asset_setting">Файлы ресурсов</string>
     <string name="title_sort_by_test_results">Сортировать по результатам теста</string>
     <string name="title_filter_config">Фильтр профилей</string>
@@ -346,14 +346,14 @@
     <string name="routing_settings_outbound_tag">Исходящее соединение</string>
 
     <string name="connection_test_pending">Проверить соединение</string>
-    <string name="connection_test_testing">Проверка…</string>
+    <string name="connection_test_testing">❕ Проверка…</string>
     <string name="connection_test_testing_count">Проверка профилей (%d)</string>
-    <string name="connection_test_available">Успешно: соединение заняло %d мс</string>
-    <string name="connection_test_error">Сбой проверки интернет-соединения: %s</string>
+    <string name="connection_test_available">✅ Пинг: %d мс</string>
+    <string name="connection_test_error">⚠️ Сбой проверки интернет-соединения: %s</string>
     <string name="connection_test_fail">Интернет недоступен</string>
     <string name="connection_test_error_status_code">Код ошибки: #%d</string>
-    <string name="connection_connected">Соединено, нажмите для проверки</string>
-    <string name="connection_not_connected">Нет соединения</string>
+    <string name="connection_connected">⚪ Подключено, нажмите для проверки пинга.</string>
+    <string name="connection_not_connected">⛔ Нет соединения</string>
     <string name="connection_runing_task_left">Запущено проверок: %s</string>
 
     <string name="import_subscription_success">Подписка импортирована</string>

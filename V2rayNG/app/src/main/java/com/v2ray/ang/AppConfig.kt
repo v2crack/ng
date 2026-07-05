@@ -286,3 +286,10 @@ object AppConfig {
         TAG_BLOCKED,
     )
 }
+/**
+ * Listener for subscription update events.
+ * Used to notify UI components when subscription data changes.
+ */
+interface SubscriptionUpdateListener {
+    fun onSubscriptionUpdated()
+}

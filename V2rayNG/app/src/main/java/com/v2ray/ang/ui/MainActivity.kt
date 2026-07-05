@@ -15,6 +15,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SearchView
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
@@ -24,6 +25,8 @@ import android.graphics.Rect
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.tabs.TabLayoutMediator
 import com.v2ray.ang.AppConfig
+import com.v2ray.ang.SubscriptionUpdateListener
+import com.v2ray.ang.AngApplication
 import com.v2ray.ang.R
 import com.v2ray.ang.databinding.ActivityMainBinding
 import com.v2ray.ang.enums.EConfigType
@@ -43,7 +46,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelectedListener, SubscriptionUpdateListener {
     private val binding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
@@ -69,6 +72,8 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        AngApplication.addSubscriptionListener(this)
         setContentView(binding.root)
         setupToolbar(binding.toolbar, false, "v2crackNG")
 
@@ -701,8 +706,17 @@ private fun formatAllProfilesWithEmoji() {
         return true
     }
 
-    override fun onDestroy() {
-        tabMediator?.detach()
-        super.onDestroy()
+override fun onDestroy() {
+    // Отписываемся от обновлений
+    AngApplication.removeSubscriptionListener(this)
+    tabMediator?.detach()
+    super.onDestroy()
+}
+override fun onSubscriptionUpdated() {
+    // Обновляем UI в UI-потоке
+    runOnUiThread {
+        setupGroupTab()
+        mainViewModel.reloadServerList()
     }
+}
 }
