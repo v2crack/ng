@@ -63,23 +63,23 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
-<!-- Download -->
-<LinearLayout
-    android:id="@+id/layout_upload"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:background="?attr/selectableItemBackgroundBorderless"
-    android:clickable="true"
-    android:focusable="true"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="@dimen/padding_spacing_dp4">
 
-    <ImageView
-        android:layout_width="@dimen/image_size_dp24"
-        android:layout_height="@dimen/image_size_dp24"
-        app:srcCompat="@drawable/ic_cloud_upload_24dp" />
-</LinearLayout>
+                    <LinearLayout
+                        android:id="@+id/layout_upload"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:padding="@dimen/padding_spacing_dp4">
+
+                        <ImageView
+                            android:layout_width="@dimen/image_size_dp24"
+                            android:layout_height="@dimen/image_size_dp24"
+                            app:srcCompat="@drawable/ic_cloud_upload_24dp" />
+                    </LinearLayout>
 
                     <LinearLayout
                         android:id="@+id/layout_share"
@@ -158,11 +158,9 @@
             </LinearLayout>
 
             <!-- Строка 2: Протокол + Адрес + Подписка + Пинг -->
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
                 android:paddingStart="@dimen/padding_spacing_dp4"
                 android:paddingTop="@dimen/padding_spacing_dp4"
                 android:paddingEnd="@dimen/padding_spacing_dp4"
@@ -179,13 +177,18 @@
                     android:background="@drawable/bg_rounded"
                     android:paddingHorizontal="6dp"
                     android:paddingVertical="2dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     tools:text="VLESS" />
 
                 <TextView
                     android:id="@+id/tv_statistics"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:lines="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
                     android:textAppearance="@style/TextAppearance.AppCompat.Small"
                     android:textSize="11sp"
                     android:layout_marginStart="@dimen/padding_spacing_dp8"
@@ -193,17 +196,26 @@
                     android:background="@drawable/bg_rounded"
                     android:paddingHorizontal="6dp"
                     android:paddingVertical="2dp"
+                    app:layout_constraintStart_toEndOf="@id/tv_type"
+                    app:layout_constraintEnd_toStartOf="@id/layout_subscription"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintWidth_default="spread"
+                    app:layout_constraintHorizontal_weight="1"
                     tools:text="192.168.1.1:443" />
 
                 <!-- Подписка -->
                 <LinearLayout
+                    android:id="@+id/layout_subscription"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginEnd="@dimen/padding_spacing_dp8">
+                    android:layout_marginEnd="@dimen/padding_spacing_dp8"
+                    app:layout_constraintEnd_toStartOf="@id/tv_test_result"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent">
 
                     <androidx.constraintlayout.widget.ConstraintLayout
-                        android:id="@+id/layout_subscription"
                         android:layout_width="@dimen/image_size_dp24"
                         android:layout_height="@dimen/image_size_dp24"
                         android:background="@drawable/ic_circle">
@@ -222,12 +234,6 @@
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </LinearLayout>
 
-                <!-- Растяжка -->
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:layout_weight="1" />
-
                 <!-- Пинг -->
                 <TextView
                     android:id="@+id/tv_test_result"
@@ -240,9 +246,12 @@
                     android:background="@drawable/bg_rounded"
                     android:paddingHorizontal="6dp"
                     android:paddingVertical="2dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     tools:text="214ms" />
 
-            </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
         </LinearLayout>
 

@@ -44,6 +44,13 @@ object AppConfig {
     const val PREF_FRAGMENT_PACKETS = "pref_fragment_packets"
     const val PREF_FRAGMENT_LENGTH = "pref_fragment_length"
     const val PREF_FRAGMENT_INTERVAL = "pref_fragment_interval"
+
+    const val PREF_PING_THREADS = "pref_ping_threads"
+    const val PREF_AUTO_PING_AFTER_START = "pref_auto_ping_after_start"
+const val PREF_CUSTOM_BACKGROUND_ENABLED = "pref_custom_background_enabled"
+const val PREF_CUSTOM_BACKGROUND_URI = "pref_custom_background_uri"
+const val PREF_CUSTOM_BACKGROUND_PICK = "pref_custom_background_pick"
+
     const val SUBSCRIPTION_AUTO_UPDATE = "pref_auto_update_subscription"
     const val SUBSCRIPTION_AUTO_UPDATE_INTERVAL = "pref_auto_update_interval"
     const val SUBSCRIPTION_DEFAULT_UPDATE_INTERVAL = "1440" // Default is 24 hours

@@ -22,6 +22,8 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import android.graphics.Rect
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.tabs.TabLayoutMediator
 import com.v2ray.ang.AppConfig
@@ -45,6 +47,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelectedListener, SubscriptionUpdateListener {
     private val binding by lazy {
@@ -76,6 +80,8 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         AngApplication.addSubscriptionListener(this)
         setContentView(binding.root)
         setupToolbar(binding.toolbar, false, "v2crackNG")
+
+        applyCustomBackground()
 
         // setup viewpager and tablayout
         groupPagerAdapter = GroupPagerAdapter(this, emptyList())
@@ -113,6 +119,49 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
         checkAndRequestPermission(PermissionType.POST_NOTIFICATIONS) {
         }
     }
+
+private fun applyCustomBackground() {
+    val enabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_CUSTOM_BACKGROUND_ENABLED, false)
+    val path = MmkvManager.decodeSettingsString(AppConfig.PREF_CUSTOM_BACKGROUND_URI)
+
+    if (!enabled || path.isNullOrEmpty()) {
+        binding.backgroundContainer.visibility = View.GONE
+        binding.viewPager.setBackgroundColor(ContextCompat.getColor(this, R.color.md_theme_background_real_other))
+        return
+    }
+
+    binding.backgroundContainer.visibility = View.VISIBLE
+    binding.viewPager.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+
+    val file = File(path)
+    if (!file.exists()) {
+        binding.backgroundContainer.visibility = View.GONE
+        binding.viewPager.setBackgroundColor(ContextCompat.getColor(this, R.color.md_theme_background_real_other))
+        return
+    }
+
+    val uri = Uri.fromFile(file)
+    val mimeType = contentResolver.getType(uri)
+
+    if (mimeType?.startsWith("image") == true) {
+        binding.ivCustomBackground.visibility = View.VISIBLE
+        binding.vvCustomBackground.visibility = View.GONE
+        binding.ivCustomBackground.setImageURI(uri)
+    } else if (mimeType?.startsWith("video") == true) {
+        binding.ivCustomBackground.visibility = View.GONE
+        binding.vvCustomBackground.visibility = View.VISIBLE
+        binding.vvCustomBackground.setVideoURI(uri)
+        binding.vvCustomBackground.setOnPreparedListener { mp ->
+            mp.isLooping = true
+            binding.vvCustomBackground.start()
+        }
+    } else {
+        // fallback на изображение
+        binding.ivCustomBackground.visibility = View.VISIBLE
+        binding.vvCustomBackground.visibility = View.GONE
+        binding.ivCustomBackground.setImageURI(uri)
+    }
+}
 
     private fun setupViewModel() {
         mainViewModel.updateTestResultAction.observe(this) { setTestState(it) }

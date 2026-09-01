@@ -246,6 +246,11 @@ object SettingsManager {
             .firstOrNull { it.remarks == remarks }
     }
 
+fun getPingThreads(): Int {
+    val userValue = MmkvManager.decodeSettingsString(AppConfig.PREF_PING_THREADS)?.toIntOrNull() ?: 0
+    return if (userValue > 0) userValue else Runtime.getRuntime().availableProcessors().coerceAtLeast(1) * 2
+}
+
     /**
      * Removes the subscription.
      * If there are no remaining subscriptions,

@@ -499,10 +499,15 @@ suspend fun formatAllProfilesWithEmoji(): Int {
                     isRunning.value = false
                 }
 
-                AppConfig.MSG_STATE_START_SUCCESS -> {
-                    getApplication<AngApplication>().toastSuccess(R.string.toast_services_success)
-                    isRunning.value = true
-                }
+AppConfig.MSG_STATE_START_SUCCESS -> {
+    getApplication<AngApplication>().toastSuccess(R.string.toast_services_success)
+    isRunning.value = true
+
+    if (MmkvManager.decodeSettingsBool(AppConfig.PREF_AUTO_PING_AFTER_START, false)) {
+        updateTestResultAction.value = getApplication<AngApplication>().getString(R.string.connection_test_testing)
+        testCurrentServerRealPing()
+    }
+}
 
                 AppConfig.MSG_STATE_START_FAILURE -> {
                     getApplication<AngApplication>().toastError(R.string.toast_services_failure)

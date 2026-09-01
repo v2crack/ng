@@ -3,27 +3,27 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory android:title="@string/title_ui_settings">
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_speed_enabled"
             android:summary="@string/summary_pref_speed_enabled"
             android:title="@string/title_pref_speed_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_confirm_remove"
             android:summary="@string/summary_pref_confirm_remove"
             android:title="@string/title_pref_confirm_remove" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_start_scan_immediate"
             android:summary="@string/summary_pref_start_scan_immediate"
             android:title="@string/title_pref_start_scan_immediate" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_double_column_display"
             android:summary="@string/summary_pref_double_column_display"
             android:title="@string/title_pref_double_column_display" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_group_all_display"
             android:summary="@string/summary_pref_group_all_display"
             android:title="@string/title_pref_group_all_display" />
@@ -46,33 +46,47 @@
 
     </PreferenceCategory>
 
+<PreferenceCategory android:title="Кастомный фон">
+
+    <SwitchPreferenceCompat
+        android:key="pref_custom_background_enabled"
+        android:title="Включить кастомный фон"
+        android:defaultValue="false" />
+
+    <Preference
+        android:key="pref_custom_background_pick"
+        android:title="Выбрать фото или видео"
+        android:summary="Нажмите, чтобы выбрать файл" />
+
+</PreferenceCategory>
+
     <PreferenceCategory android:title="@string/title_vpn_settings">
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_ipv6_enabled"
             android:summary="@string/summary_pref_ipv6_enabled"
             android:title="@string/title_pref_ipv6_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_prefer_ipv6"
             android:summary="@string/summary_pref_prefer_ipv6"
             android:title="@string/title_pref_prefer_ipv6" />
 
-<!--        <CheckBoxPreference-->
+<!--        <SwitchPreferenceCompat-->
 <!--            android:key="pref_per_app_proxy"-->
 <!--            android:summary="@string/summary_pref_per_app_proxy"-->
 <!--            android:title="@string/title_pref_per_app_proxy" />-->
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_local_dns_enabled"
             android:summary="@string/summary_pref_local_dns_enabled"
             android:title="@string/title_pref_local_dns_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_fake_dns_enabled"
             android:summary="@string/summary_pref_fake_dns_enabled"
             android:title="@string/title_pref_fake_dns_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_append_http_proxy"
             android:summary="@string/summary_pref_append_http_proxy"
             android:title="@string/title_pref_append_http_proxy" />
@@ -110,7 +124,7 @@
             android:summary="1500"
             android:title="@string/title_pref_vpn_mtu" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="pref_use_hev_tunnel_v2"
             android:summary="@string/summary_pref_use_hev_tunnel"
@@ -132,25 +146,25 @@
 
     <PreferenceCategory android:title="@string/title_core_settings">
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:defaultValue="true"
             android:key="pref_sniffing_enabled"
             android:summary="@string/summary_pref_sniffing_enabled"
             android:title="@string/title_pref_sniffing_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="pref_route_only_enabled"
             android:summary="@string/summary_pref_route_only_enabled"
             android:title="@string/title_pref_route_only_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="pref_proxy_sharing_enabled"
             android:summary="@string/summary_pref_proxy_sharing_enabled"
             android:title="@string/title_pref_proxy_sharing_enabled" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="pref_allow_insecure"
             android:summary="@string/summary_pref_allow_insecure"
@@ -162,7 +176,7 @@
             android:summary="10808"
             android:title="@string/title_pref_socks_port" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:key="pref_dynamic_socks_port"
             android:summary="@string/summary_pref_dynamic_socks_port"
@@ -215,7 +229,7 @@
     <PreferenceCategory
         android:title="@string/title_mux_settings"
         app:initialExpandedChildrenCount="0">
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_mux_enabled"
             android:summary="@string/summary_pref_mux_enabled"
             android:title="@string/title_pref_mux_enabled" />
@@ -245,7 +259,7 @@
 <PreferenceCategory
     android:title="XMUX Settings"
     app:initialExpandedChildrenCount="0">
-    <CheckBoxPreference
+    <SwitchPreferenceCompat
         android:key="pref_xmux_enabled"
         android:title="Enable XMUX"
         android:summary="Limit XHTTP multiplexing to 1 connection"
@@ -255,7 +269,7 @@
     <PreferenceCategory
         android:title="@string/title_fragment_settings"
         app:initialExpandedChildrenCount="0">
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_fragment_enabled"
             android:title="@string/title_pref_fragment_enabled" />
 
@@ -281,7 +295,7 @@
     <PreferenceCategory
         android:title="@string/title_sub_setting"
         app:initialExpandedChildrenCount="0">
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_auto_update_subscription"
             android:summary="@string/summary_pref_auto_update_subscription"
             android:title="@string/title_pref_auto_update_subscription" />
@@ -294,18 +308,30 @@
 
     <PreferenceCategory android:title="@string/title_advanced">
 
-        <CheckBoxPreference
+<EditTextPreference
+    android:inputType="number"
+    android:key="pref_ping_threads"
+    android:summary="По умолчанию: ядра * 2"
+    android:title="Количество потоков пинг-теста" />
+
+<SwitchPreferenceCompat
+    android:defaultValue="false"
+    android:key="pref_auto_ping_after_start"
+    android:summary="Автоматически запускать пинг-тест после успешного старта VPN"
+    android:title="Автопинг после старта" />
+
+        <SwitchPreferenceCompat
             android:key="pref_is_booted"
             android:summary="@string/summary_pref_is_booted"
             android:title="@string/title_pref_is_booted" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_auto_remove_invalid_after_test"
             android:defaultValue="false"
             android:summary="@string/summary_pref_auto_remove_invalid_after_test"
             android:title="@string/title_pref_auto_remove_invalid_after_test" />
 
-        <CheckBoxPreference
+        <SwitchPreferenceCompat
             android:key="pref_auto_sort_after_test"
             android:defaultValue="false"
             android:summary="@string/summary_pref_auto_sort_after_test"

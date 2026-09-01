@@ -10,6 +10,27 @@
         android:layout_height="match_parent"
         android:fitsSystemWindows="true">
 
+        <!-- Кастомный фон (фото/видео) -->
+        <FrameLayout
+            android:id="@+id/background_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/iv_custom_background"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+            <VideoView
+                android:id="@+id/vv_custom_background"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
+        </FrameLayout>
+
         <!-- ViewPager2 + ProgressBar -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -24,14 +45,13 @@
                 android:visibility="invisible"
                 app:indicatorColor="@color/color_fab_active" />
 
-<androidx.viewpager2.widget.ViewPager2
-    android:id="@+id/view_pager"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:nextFocusRight="@+id/fab"
-    android:scrollbars="vertical" 
-    android:background="@color/md_theme_background_real_other" />
-
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/view_pager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:nextFocusRight="@+id/fab"
+                android:scrollbars="vertical"
+                android:background="@color/md_theme_background_real_other" />
         </LinearLayout>
 
         <!-- Toolbar -->

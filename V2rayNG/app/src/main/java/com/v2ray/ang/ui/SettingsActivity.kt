@@ -2,7 +2,11 @@ package com.v2ray.ang.ui
 
 import android.os.Bundle
 import android.view.View
-import androidx.preference.CheckBoxPreference
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
+import androidx.preference.Preference
+import androidx.preference.SwitchPreferenceCompat
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.PreferenceFragmentCompat
@@ -28,42 +32,57 @@ class SettingsActivity : BaseActivity() {
 
     class SettingsFragment : PreferenceFragmentCompat() {
 
-        private val localDns by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_LOCAL_DNS_ENABLED) }
-        private val fakeDns by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_FAKE_DNS_ENABLED) }
-        private val appendHttpProxy by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_APPEND_HTTP_PROXY) }
+        private lateinit var pickMediaLauncher: ActivityResultLauncher<String>
 
-        //        private val localDnsPort by lazy { findPreference<EditTextPreference>(AppConfig.PREF_LOCAL_DNS_PORT) }
+        private val localDns by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_LOCAL_DNS_ENABLED) }
+        private val fakeDns by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_FAKE_DNS_ENABLED) }
+        private val appendHttpProxy by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_APPEND_HTTP_PROXY) }
+
         private val vpnDns by lazy { findPreference<EditTextPreference>(AppConfig.PREF_VPN_DNS) }
         private val vpnBypassLan by lazy { findPreference<ListPreference>(AppConfig.PREF_VPN_BYPASS_LAN) }
         private val vpnInterfaceAddress by lazy { findPreference<ListPreference>(AppConfig.PREF_VPN_INTERFACE_ADDRESS_CONFIG_INDEX) }
         private val vpnMtu by lazy { findPreference<EditTextPreference>(AppConfig.PREF_VPN_MTU) }
 
-        private val mux by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_MUX_ENABLED) }
+        private val mux by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_MUX_ENABLED) }
         private val muxConcurrency by lazy { findPreference<EditTextPreference>(AppConfig.PREF_MUX_CONCURRENCY) }
         private val muxXudpConcurrency by lazy { findPreference<EditTextPreference>(AppConfig.PREF_MUX_XUDP_CONCURRENCY) }
         private val muxXudpQuic by lazy { findPreference<ListPreference>(AppConfig.PREF_MUX_XUDP_QUIC) }
 
-        private val fragment by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_FRAGMENT_ENABLED) }
+        private val fragment by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_FRAGMENT_ENABLED) }
         private val fragmentPackets by lazy { findPreference<ListPreference>(AppConfig.PREF_FRAGMENT_PACKETS) }
         private val fragmentLength by lazy { findPreference<EditTextPreference>(AppConfig.PREF_FRAGMENT_LENGTH) }
         private val fragmentInterval by lazy { findPreference<EditTextPreference>(AppConfig.PREF_FRAGMENT_INTERVAL) }
 
-        private val autoUpdateCheck by lazy { findPreference<CheckBoxPreference>(AppConfig.SUBSCRIPTION_AUTO_UPDATE) }
+        private val autoUpdateCheck by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.SUBSCRIPTION_AUTO_UPDATE) }
         private val autoUpdateInterval by lazy { findPreference<EditTextPreference>(AppConfig.SUBSCRIPTION_AUTO_UPDATE_INTERVAL) }
         private val mode by lazy { findPreference<ListPreference>(AppConfig.PREF_MODE) }
         private val socksPort by lazy { findPreference<EditTextPreference>(AppConfig.PREF_SOCKS_PORT) }
-        private val dynamicSocksPort by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_DYNAMIC_SOCKS_PORT) }
+        private val dynamicSocksPort by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_DYNAMIC_SOCKS_PORT) }
 
         private val hevTunLogLevel by lazy { findPreference<ListPreference>(AppConfig.PREF_HEV_TUNNEL_LOGLEVEL) }
         private val hevTunRwTimeout by lazy { findPreference<EditTextPreference>(AppConfig.PREF_HEV_TUNNEL_RW_TIMEOUT) }
-        private val useHevTun by lazy { findPreference<CheckBoxPreference>(AppConfig.PREF_USE_HEV_TUNNEL) }
+        private val useHevTun by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_USE_HEV_TUNNEL) }
 
         override fun onCreatePreferences(bundle: Bundle?, s: String?) {
-            // Use MMKV as the storage backend for all Preferences
-            // This prevents inconsistencies between SharedPreferences and MMKV
             preferenceManager.preferenceDataStore = MmkvPreferenceDataStore()
 
             addPreferencesFromResource(R.xml.pref_settings)
+
+            // Инициализация лаунчера после привязки к Activity
+            pickMediaLauncher = requireActivity().registerForActivityResult(
+                ActivityResultContracts.GetContent()
+            ) { uri: Uri? ->
+                uri?.let {
+                    MmkvManager.encodeSettings(AppConfig.PREF_CUSTOM_BACKGROUND_URI, it.toString())
+                    findPreference<Preference>(AppConfig.PREF_CUSTOM_BACKGROUND_PICK)?.summary = it.toString()
+                }
+            }
+
+            val pickBgPref = findPreference<Preference>(AppConfig.PREF_CUSTOM_BACKGROUND_PICK)
+            pickBgPref?.setOnPreferenceClickListener {
+                pickMediaLauncher.launch("image/*")
+                true
+            }
 
             initPreferenceSummaries()
 
@@ -99,6 +118,7 @@ class SettingsActivity : BaseActivity() {
                 }
                 true
             }
+
             mode?.setOnPreferenceChangeListener { pref, newValue ->
                 val valueStr = newValue.toString()
                 (pref as? ListPreference)?.let { lp ->
@@ -150,7 +170,7 @@ class SettingsActivity : BaseActivity() {
                         }
                     }
 
-                    is CheckBoxPreference, is androidx.preference.SwitchPreferenceCompat -> {
+                    is SwitchPreferenceCompat -> {
                     }
                 }
             }
@@ -170,19 +190,10 @@ class SettingsActivity : BaseActivity() {
         override fun onStart() {
             super.onStart()
             updateHevTunSettings(MmkvManager.decodeSettingsBool(AppConfig.PREF_USE_HEV_TUNNEL, true))
-
-            // Initialize mode-dependent UI states
             updateMode(MmkvManager.decodeSettingsString(AppConfig.PREF_MODE, VPN))
-
-            // Initialize mux-dependent UI states
             updateMux(MmkvManager.decodeSettingsBool(AppConfig.PREF_MUX_ENABLED, false))
-
-            // Initialize fragment-dependent UI states
             updateFragment(MmkvManager.decodeSettingsBool(AppConfig.PREF_FRAGMENT_ENABLED, false))
-
-            // Initialize auto-update interval state
             autoUpdateInterval?.isEnabled = MmkvManager.decodeSettingsBool(AppConfig.SUBSCRIPTION_AUTO_UPDATE, false)
-
             updateDynamicSocksPort(MmkvManager.decodeSettingsBool(AppConfig.PREF_DYNAMIC_SOCKS_PORT, false))
         }
 
@@ -191,7 +202,6 @@ class SettingsActivity : BaseActivity() {
             localDns?.isEnabled = vpn
             fakeDns?.isEnabled = vpn
             appendHttpProxy?.isEnabled = vpn
-//            localDnsPort?.isEnabled = vpn
             vpnDns?.isEnabled = vpn
             vpnBypassLan?.isEnabled = vpn
             vpnInterfaceAddress?.isEnabled = vpn
@@ -199,24 +209,13 @@ class SettingsActivity : BaseActivity() {
             useHevTun?.isEnabled = vpn
             updateHevTunSettings(false)
             if (vpn) {
-                updateLocalDns(
-                    MmkvManager.decodeSettingsBool(
-                        AppConfig.PREF_LOCAL_DNS_ENABLED,
-                        false
-                    )
-                )
-                updateHevTunSettings(
-                    MmkvManager.decodeSettingsBool(
-                        AppConfig.PREF_USE_HEV_TUNNEL,
-                        false
-                    )
-                )
+                updateLocalDns(MmkvManager.decodeSettingsBool(AppConfig.PREF_LOCAL_DNS_ENABLED, false))
+                updateHevTunSettings(MmkvManager.decodeSettingsBool(AppConfig.PREF_USE_HEV_TUNNEL, false))
             }
         }
 
         private fun updateLocalDns(enabled: Boolean) {
             fakeDns?.isEnabled = enabled
-//            localDnsPort?.isEnabled = enabled
             vpnDns?.isEnabled = !enabled
         }
 
@@ -230,11 +229,9 @@ class SettingsActivity : BaseActivity() {
                     SubscriptionUpdater.UpdateTask::class.java,
                     interval,
                     TimeUnit.MINUTES
-                )
-                    .apply {
-                        setInitialDelay(interval, TimeUnit.MINUTES)
-                    }
-                    .build()
+                ).apply {
+                    setInitialDelay(interval, TimeUnit.MINUTES)
+                }.build()
             )
         }
 
@@ -257,7 +254,6 @@ class SettingsActivity : BaseActivity() {
             val concurrency = value?.toIntOrNull() ?: 8
             muxConcurrency?.summary = concurrency.toString()
         }
-
 
         private fun updateMuxXudpConcurrency(value: String?) {
             if (value == null) {
