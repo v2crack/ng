@@ -2,6 +2,8 @@ package com.v2ray.ang.ui
 
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.graphics.BitmapFactory
+import android.graphics.Rect
 import android.net.Uri
 import android.net.VpnService
 import android.os.Bundle
@@ -14,16 +16,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.widget.SearchView
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.appcompat.widget.SearchView
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import android.graphics.Rect
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.tabs.TabLayoutMediator
 import com.v2ray.ang.AppConfig
@@ -40,6 +39,7 @@ import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SettingsChangeManager
 import com.v2ray.ang.handler.SettingsManager
 import com.v2ray.ang.handler.V2RayServiceManager
+import com.v2ray.ang.util.BackgroundBlurHelper
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
@@ -48,7 +48,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
 
 class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelectedListener, SubscriptionUpdateListener {
     private val binding by lazy {
@@ -121,47 +120,84 @@ class MainActivity : HelperBaseActivity(), NavigationView.OnNavigationItemSelect
     }
 
 private fun applyCustomBackground() {
-    val enabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_CUSTOM_BACKGROUND_ENABLED, false)
-    val path = MmkvManager.decodeSettingsString(AppConfig.PREF_CUSTOM_BACKGROUND_URI)
+        val enabled = MmkvManager.decodeSettingsBool(AppConfig.PREF_CUSTOM_BACKGROUND_ENABLED, false)
+        val path = MmkvManager.decodeSettingsString(AppConfig.PREF_CUSTOM_BACKGROUND_URI)
 
-    if (!enabled || path.isNullOrEmpty()) {
-        binding.backgroundContainer.visibility = View.GONE
-        binding.viewPager.setBackgroundColor(ContextCompat.getColor(this, R.color.md_theme_background_real_other))
-        return
-    }
-
-    binding.backgroundContainer.visibility = View.VISIBLE
-    binding.viewPager.setBackgroundColor(android.graphics.Color.TRANSPARENT)
-
-    val file = File(path)
-    if (!file.exists()) {
-        binding.backgroundContainer.visibility = View.GONE
-        binding.viewPager.setBackgroundColor(ContextCompat.getColor(this, R.color.md_theme_background_real_other))
-        return
-    }
-
-    val uri = Uri.fromFile(file)
-    val mimeType = contentResolver.getType(uri)
-
-    if (mimeType?.startsWith("image") == true) {
-        binding.ivCustomBackground.visibility = View.VISIBLE
-        binding.vvCustomBackground.visibility = View.GONE
-        binding.ivCustomBackground.setImageURI(uri)
-    } else if (mimeType?.startsWith("video") == true) {
-        binding.ivCustomBackground.visibility = View.GONE
-        binding.vvCustomBackground.visibility = View.VISIBLE
-        binding.vvCustomBackground.setVideoURI(uri)
-        binding.vvCustomBackground.setOnPreparedListener { mp ->
-            mp.isLooping = true
-            binding.vvCustomBackground.start()
+        if (!enabled || path.isNullOrEmpty()) {
+            binding.backgroundContainer.visibility = View.GONE
+            binding.ivCustomBackground.setImageDrawable(null)
+            binding.vvCustomBackground.stopPlayback()
+            binding.viewPager.setBackgroundColor(
+                ContextCompat.getColor(this, R.color.md_theme_background_real_other)
+            )
+            return
         }
-    } else {
-        // fallback на изображение
-        binding.ivCustomBackground.visibility = View.VISIBLE
+
+        binding.backgroundContainer.visibility = View.VISIBLE
+        binding.viewPager.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+
+        // Video: no pre-blur — play as-is
+        val isVideo = path.startsWith("content://") &&
+            contentResolver.getType(Uri.parse(path))?.startsWith("video") == true
+
+        if (isVideo) {
+            try {
+                val uri = Uri.parse(path)
+                binding.ivCustomBackground.visibility = View.GONE
+                binding.ivCustomBackground.setImageDrawable(null)
+                binding.vvCustomBackground.visibility = View.VISIBLE
+                binding.vvCustomBackground.setVideoURI(uri)
+                binding.vvCustomBackground.setOnPreparedListener { mp ->
+                    mp.isLooping = true
+                    binding.vvCustomBackground.start()
+                }
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "Failed to play background video", e)
+                binding.backgroundContainer.visibility = View.GONE
+                binding.viewPager.setBackgroundColor(
+                    ContextCompat.getColor(this, R.color.md_theme_background_real_other)
+                )
+            }
+            return
+        }
+
+        // Image: load pre-rendered blurred (or original) file off the main thread
         binding.vvCustomBackground.visibility = View.GONE
-        binding.ivCustomBackground.setImageURI(uri)
+        binding.vvCustomBackground.stopPlayback()
+        binding.ivCustomBackground.visibility = View.VISIBLE
+
+        val blurLevel = MmkvManager.decodeSettingsInt(AppConfig.PREF_CUSTOM_BACKGROUND_BLUR, 0)
+        lifecycleScope.launch {
+            val displayPath = withContext(Dispatchers.IO) {
+                BackgroundBlurHelper.ensureDisplayImage(this@MainActivity, blurLevel)
+            }
+            if (displayPath.isNullOrBlank()) {
+                binding.backgroundContainer.visibility = View.GONE
+                binding.viewPager.setBackgroundColor(
+                    ContextCompat.getColor(this@MainActivity, R.color.md_theme_background_real_other)
+                )
+                return@launch
+            }
+            try {
+                val file = File(displayPath)
+                if (file.exists()) {
+                    val bmp = withContext(Dispatchers.IO) {
+                        BitmapFactory.decodeFile(file.absolutePath)
+                    }
+                    binding.ivCustomBackground.setImageBitmap(bmp)
+                } else {
+                    // Legacy content URI fallback
+                    binding.ivCustomBackground.setImageURI(Uri.parse(displayPath))
+                }
+            } catch (e: Exception) {
+                LogUtil.e(AppConfig.TAG, "Failed to show custom background", e)
+                binding.backgroundContainer.visibility = View.GONE
+                binding.viewPager.setBackgroundColor(
+                    ContextCompat.getColor(this@MainActivity, R.color.md_theme_background_real_other)
+                )
+            }
+        }
     }
-}
 
     private fun setupViewModel() {
         mainViewModel.updateTestResultAction.observe(this) { setTestState(it) }
@@ -176,11 +212,22 @@ private fun applyCustomBackground() {
         val groups = mainViewModel.getSubscriptions(this)
         groupPagerAdapter.update(groups)
 
+        val showCount = MmkvManager.decodeSettingsBool(AppConfig.PREF_GROUP_COUNT_DISPLAY, false)
+
         tabMediator?.detach()
         tabMediator = TabLayoutMediator(binding.tabGroup, binding.viewPager) { tab, position ->
-            groupPagerAdapter.groups.getOrNull(position)?.let {
-                tab.text = it.remarks
-                tab.tag = it.id
+            groupPagerAdapter.groups.getOrNull(position)?.let { group ->
+                tab.text = if (showCount) {
+                    val count = if (group.id.isEmpty()) {
+                        MmkvManager.decodeAllServerList().size
+                    } else {
+                        MmkvManager.decodeServerList(group.id).size
+                    }
+                    "${group.remarks} ($count)"
+                } else {
+                    group.remarks
+                }
+                tab.tag = group.id
             }
         }.also { it.attach() }
 
@@ -261,6 +308,7 @@ private fun applyCustomBackground() {
 
     override fun onResume() {
         super.onResume()
+        applyCustomBackground()
     }
 
     override fun onPause() {
@@ -555,6 +603,26 @@ private fun applyCustomBackground() {
     }
 
     private fun exportAll() {
+        // Fake export for permanent/community groups: flash an image briefly, no clipboard export
+        val currentSub = MmkvManager.decodeSubscription(mainViewModel.subscriptionId)
+        if (currentSub?.isPermanent == true) {
+            val root = binding.root as? android.view.ViewGroup ?: return
+            val overlay = android.widget.ImageView(this).apply {
+                setImageResource(R.drawable.nav_header_bg)
+                scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                layoutParams = android.view.ViewGroup.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            }
+            root.addView(overlay)
+            lifecycleScope.launch {
+                delay(10L)
+                root.removeView(overlay)
+            }
+            return
+        }
+
         showLoading()
         lifecycleScope.launch(Dispatchers.IO) {
             val ret = mainViewModel.exportAllServer()

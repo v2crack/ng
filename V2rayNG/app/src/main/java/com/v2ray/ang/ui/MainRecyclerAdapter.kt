@@ -27,8 +27,8 @@ class MainRecyclerAdapter(
     private val adapterListener: MainAdapterListener?
 ) : RecyclerView.Adapter<MainRecyclerAdapter.BaseViewHolder>(), ItemTouchHelperAdapter {
     companion object {
-        private const val VIEW_TYPE_ITEM = 1
-        private const val VIEW_TYPE_FOOTER = 2
+        const val VIEW_TYPE_ITEM = 1
+        const val VIEW_TYPE_FOOTER = 2
     }
 
     private val doubleColumnDisplay = MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)
@@ -99,6 +99,11 @@ holder.itemMainBinding.tvTestResult.setTextColor(color)
             holder.itemMainBinding.tvSubscription.text = subRemarks
             holder.itemMainBinding.layoutSubscription.visibility = if (subRemarks.isEmpty()) View.GONE else View.VISIBLE
 
+            // Hide share for permanent/community profiles
+            val isPermanentProfile =
+                MmkvManager.decodeSubscription(profile.subscriptionId)?.isPermanent == true ||
+                    MmkvManager.decodeSubscription(mainViewModel.subscriptionId)?.isPermanent == true
+
             //layout
             if (doubleColumnDisplay) {
                 holder.itemMainBinding.layoutShare.visibility = View.GONE
@@ -110,16 +115,17 @@ holder.itemMainBinding.tvTestResult.setTextColor(color)
                     adapterListener?.onShare(guid, profile, position, true)
                 }
             } else {
-                holder.itemMainBinding.layoutShare.visibility = View.VISIBLE
+                holder.itemMainBinding.layoutShare.visibility =
+                    if (isPermanentProfile) View.GONE else View.VISIBLE
                 holder.itemMainBinding.layoutEdit.visibility = View.VISIBLE
                 holder.itemMainBinding.layoutRemove.visibility = View.VISIBLE
                 holder.itemMainBinding.layoutMore.visibility = View.GONE
 
-// Делаем кнопку видимой (на всякий случай)
-holder.itemMainBinding.layoutUpload.visibility = View.VISIBLE
-holder.itemMainBinding.layoutUpload.setOnClickListener {
-    adapterListener?.onUpload(guid, position)
-}
+                // Делаем кнопку видимой (на всякий случай)
+                holder.itemMainBinding.layoutUpload.visibility = View.VISIBLE
+                holder.itemMainBinding.layoutUpload.setOnClickListener {
+                    adapterListener?.onUpload(guid, position)
+                }
 
                 holder.itemMainBinding.layoutShare.setOnClickListener {
                     adapterListener?.onShare(guid, profile, position, false)

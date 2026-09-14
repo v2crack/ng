@@ -27,14 +27,28 @@ import java.lang.ref.SoftReference
 
 object V2RayServiceManager {
 
-    private val coreController: CoreController = V2RayNativeManager.newCoreController(CoreCallback())
     private val mMsgReceive = ReceiveMessageHandler()
     private var currentConfig: ProfileItem? = null
+
+    private var _coreController: CoreController? = null
+    private val coreController: CoreController
+        get() {
+            if (_coreController == null) {
+                // Ensure core env is initialized before creating controller
+                serviceControl?.get()?.getService()?.let { ctx ->
+                    V2RayNativeManager.initCoreEnv(ctx)
+                }
+                _coreController = V2RayNativeManager.newCoreController(CoreCallback())
+            }
+            return _coreController!!
+        }
 
     var serviceControl: SoftReference<ServiceControl>? = null
         set(value) {
             field = value
             V2RayNativeManager.initCoreEnv(value?.get()?.getService())
+            // Reset controller so it will be recreated after proper initialization
+            _coreController = null
         }
 
     /**
@@ -90,6 +104,7 @@ object V2RayServiceManager {
      * @param context The context from which the service is started.
      */
     private fun startContextService(context: Context) {
+        V2RayNativeManager.initCoreEnv(context)
         if (coreController.isRunning) {
             return
         }
@@ -122,6 +137,7 @@ object V2RayServiceManager {
      * Starts the V2Ray core service.
      */
     fun startCoreLoop(vpnInterface: ParcelFileDescriptor?): Boolean {
+        V2RayNativeManager.initCoreEnv(getService())
         if (coreController.isRunning) {
             return false
         }

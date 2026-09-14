@@ -14,6 +14,7 @@ import com.v2ray.ang.enums.EConfigType
 import com.v2ray.ang.extension.isNotNullEmpty
 import com.v2ray.ang.fmt.CustomFmt
 import com.v2ray.ang.fmt.Hysteria2Fmt
+import com.v2ray.ang.fmt.PolicyGroupFmt
 import com.v2ray.ang.fmt.ShadowsocksFmt
 import com.v2ray.ang.fmt.SocksFmt
 import com.v2ray.ang.fmt.TrojanFmt
@@ -25,6 +26,8 @@ import com.v2ray.ang.util.JsonUtil
 import com.v2ray.ang.util.LogUtil
 import com.v2ray.ang.util.QRCodeDecoder
 import com.v2ray.ang.util.Utils
+import org.json.JSONArray
+import org.json.JSONObject
 import java.net.URI
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
@@ -65,6 +68,28 @@ object AngConfigManager {
      */
     fun shareNonCustomConfigsToClipboard(context: Context, serverList: List<String>): Int {
         try {
+            if (serverList.isEmpty()) return 0
+
+            // If the group consists only of CUSTOM profiles — export as JSON array of raw configs
+            val profiles = serverList.mapNotNull { guid ->
+                MmkvManager.decodeServerConfig(guid)?.let { guid to it }
+            }
+            if (profiles.isNotEmpty() && profiles.all { it.second.configType == EConfigType.CUSTOM }) {
+                val array = JSONArray()
+                for ((guid, _) in profiles) {
+                    val raw = MmkvManager.decodeServerRaw(guid)?.trim().orEmpty()
+                    if (raw.isEmpty()) continue
+                    try {
+                        array.put(JSONObject(raw))
+                    } catch (_: Exception) {
+                        // skip invalid raw JSON
+                    }
+                }
+                if (array.length() == 0) return -1
+                Utils.setClipboard(context, array.toString())
+                return array.length()
+            }
+
             val sb = StringBuilder()
             for (guid in serverList) {
                 val url = shareConfig(guid)
@@ -147,8 +172,8 @@ object AngConfigManager {
                 EConfigType.TROJAN -> TrojanFmt.toUri(config)
                 EConfigType.WIREGUARD -> WireguardFmt.toUri(config)
                 EConfigType.HYSTERIA2 -> Hysteria2Fmt.toUri(config)
-                EConfigType.POLICYGROUP -> ""
-                else -> {}
+                EConfigType.POLICYGROUP -> PolicyGroupFmt.toUri(config)
+                else -> ""
             }
         } catch (e: Exception) {
             LogUtil.e(AppConfig.TAG, "Failed to share config for GUID: $guid", e)
@@ -485,6 +510,8 @@ fun importBatchConfig(server: String?, subid: String, append: Boolean): Pair<Int
                 WireguardFmt.parse(str)
             } else if (str.startsWith(EConfigType.HYSTERIA2.protocolScheme) || str.startsWith(HY2)) {
                 Hysteria2Fmt.parse(str)
+            } else if (str.startsWith(EConfigType.POLICYGROUP.protocolScheme) || str.startsWith(AppConfig.GROUP)) {
+                PolicyGroupFmt.parse(str)
             } else {
                 null
             }
@@ -648,23 +675,28 @@ if (base64Decoded.contains("://")) {
             LogUtil.i(AppConfig.TAG, url)
             val userAgent = it.subscription.userAgent
 
-            var configText = try {
+            var httpResult: com.v2ray.ang.util.HttpContentResult? = null
+            try {
                 val httpPort = SettingsManager.getHttpPort()
-                HttpUtil.getUrlContentWithUserAgent(url, userAgent, 15000, httpPort)
+                httpResult = HttpUtil.getUrlContentWithUserAgentAndHeaders(url, userAgent, 15000, httpPort)
             } catch (e: Exception) {
                 LogUtil.e(AppConfig.ANG_PACKAGE, "Update subscription: proxy not ready or other error", e)
-                ""
             }
-            if (configText.isEmpty()) {
-                configText = try {
-                    HttpUtil.getUrlContentWithUserAgent(url, userAgent)
+            if (httpResult == null || httpResult.content.isEmpty()) {
+                try {
+                    httpResult = HttpUtil.getUrlContentWithUserAgentAndHeaders(url, userAgent)
                 } catch (e: Exception) {
                     LogUtil.e(AppConfig.TAG, "Update subscription: Failed to get URL content with user agent", e)
-                    ""
                 }
             }
+            val configText = httpResult?.content.orEmpty()
             if (configText.isEmpty()) {
                 return SubscriptionUpdateResult(failureCount = 1)
+            }
+
+            // Update subscription title from profile-title header or body comment when present
+            extractProfileTitle(configText, httpResult?.headers)?.let { title ->
+                it.subscription.remarks = title
             }
 
             val count = parseConfigViaSub(configText, it.guid, false)
@@ -722,8 +754,48 @@ if (base64Decoded.contains("://")) {
         val subItem = SubscriptionItem()
         subItem.remarks = uri.fragment ?: "import sub"
         subItem.url = url
+
+        // Try once to fetch profile-title from the subscription response
+        try {
+            val result = HttpUtil.getUrlContentWithUserAgentAndHeaders(url, null)
+            extractProfileTitle(result.content, result.headers)?.let { title ->
+                subItem.remarks = title
+            }
+        } catch (_: Exception) {
+            // keep default remarks (fragment or "import sub")
+        }
+
         MmkvManager.encodeSubscription("", subItem)
         return 1
+    }
+
+    /**
+     * Extracts subscription title from response headers (`profile-title`) or body (`#profile-title: NAME`).
+     * Header value may be plain text or `base64:ABCD`.
+     */
+    fun extractProfileTitle(body: String?, headers: Map<String, String>?): String? {
+        val h = headers?.entries?.firstOrNull { it.key.equals("profile-title", true) }?.value?.trim()
+        if (!h.isNullOrBlank()) {
+            if (h.startsWith("base64:", true)) {
+                val b64 = h.substringAfter(':')
+                return try {
+                    String(
+                        android.util.Base64.decode(b64, android.util.Base64.DEFAULT),
+                        Charsets.UTF_8
+                    ).trim().ifBlank { null }
+                } catch (_: Exception) {
+                    null
+                }
+            }
+            return h
+        }
+        body?.lineSequence()?.forEach { line ->
+            val t = line.trim()
+            if (t.startsWith("#profile-title:", true)) {
+                return t.substringAfter(':').trim().ifBlank { null }
+            }
+        }
+        return null
     }
 
     /** Generates a description for the profile.

@@ -1,15 +1,17 @@
 package com.v2ray.ang.ui
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import android.net.Uri
-import androidx.preference.Preference
-import androidx.preference.SwitchPreferenceCompat
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SeekBarPreference
+import androidx.preference.SwitchPreferenceCompat
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
 import androidx.work.multiprocess.RemoteWorkManager
@@ -18,9 +20,12 @@ import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.VPN
 import com.v2ray.ang.R
 import com.v2ray.ang.extension.toLongEx
+import com.v2ray.ang.extension.toast
+import com.v2ray.ang.extension.toastError
 import com.v2ray.ang.handler.MmkvManager
 import com.v2ray.ang.handler.SubscriptionUpdater
 import com.v2ray.ang.helper.MmkvPreferenceDataStore
+import com.v2ray.ang.util.AppFontHelper
 import com.v2ray.ang.util.Utils
 import java.util.concurrent.TimeUnit
 
@@ -32,7 +37,8 @@ class SettingsActivity : BaseActivity() {
 
     class SettingsFragment : PreferenceFragmentCompat() {
 
-        private lateinit var pickMediaLauncher: ActivityResultLauncher<String>
+        private lateinit var pickMediaLauncher: ActivityResultLauncher<Array<String>>
+        private lateinit var pickFontLauncher: ActivityResultLauncher<Array<String>>
 
         private val localDns by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_LOCAL_DNS_ENABLED) }
         private val fakeDns by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_FAKE_DNS_ENABLED) }
@@ -63,26 +69,122 @@ class SettingsActivity : BaseActivity() {
         private val hevTunRwTimeout by lazy { findPreference<EditTextPreference>(AppConfig.PREF_HEV_TUNNEL_RW_TIMEOUT) }
         private val useHevTun by lazy { findPreference<SwitchPreferenceCompat>(AppConfig.PREF_USE_HEV_TUNNEL) }
 
+        private val fontMimeTypes = arrayOf(
+            "font/ttf",
+            "font/otf",
+            "application/x-font-ttf",
+            "application/x-font-otf",
+            "application/octet-stream",
+            "*/*"
+        )
+
         override fun onCreatePreferences(bundle: Bundle?, s: String?) {
             preferenceManager.preferenceDataStore = MmkvPreferenceDataStore()
 
             addPreferencesFromResource(R.xml.pref_settings)
 
             // Инициализация лаунчера после привязки к Activity
-            pickMediaLauncher = requireActivity().registerForActivityResult(
-                ActivityResultContracts.GetContent()
+            pickMediaLauncher = registerForActivityResult(
+                ActivityResultContracts.OpenDocument()
             ) { uri: Uri? ->
-                uri?.let {
-                    MmkvManager.encodeSettings(AppConfig.PREF_CUSTOM_BACKGROUND_URI, it.toString())
-                    findPreference<Preference>(AppConfig.PREF_CUSTOM_BACKGROUND_PICK)?.summary = it.toString()
+                uri?.let { picked ->
+                    val mime = try {
+                        requireActivity().contentResolver.getType(picked)
+                    } catch (_: Exception) {
+                        null
+                    }
+                    if (mime?.startsWith("video") == true) {
+                        // Video: keep content URI (no pre-blur)
+                        try {
+                            val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            requireActivity().contentResolver.takePersistableUriPermission(picked, takeFlags)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                        MmkvManager.encodeSettings(AppConfig.PREF_CUSTOM_BACKGROUND_URI, picked.toString())
+                        findPreference<Preference>(AppConfig.PREF_CUSTOM_BACKGROUND_PICK)?.summary =
+                            "Видео (без размытия)"
+                        requireContext().toast("Видео-фон сохранён")
+                    } else {
+                        // Image: copy into app files, then bake blur if needed
+                        val path = com.v2ray.ang.util.BackgroundBlurHelper.importOriginalImage(
+                            requireContext(),
+                            picked
+                        )
+                        if (path != null) {
+                            val level = MmkvManager.decodeSettingsInt(
+                                AppConfig.PREF_CUSTOM_BACKGROUND_BLUR,
+                                0
+                            )
+                            // Pre-render blur off UI thread
+                            Thread {
+                                com.v2ray.ang.util.BackgroundBlurHelper.ensureDisplayImage(
+                                    requireContext().applicationContext,
+                                    level
+                                )
+                            }.start()
+                            findPreference<Preference>(AppConfig.PREF_CUSTOM_BACKGROUND_PICK)?.summary =
+                                "Фото сохранено в приложении"
+                            requireContext().toast("Фон сохранён")
+                        } else {
+                            requireContext().toastError("Не удалось сохранить изображение")
+                        }
+                    }
                 }
             }
 
             val pickBgPref = findPreference<Preference>(AppConfig.PREF_CUSTOM_BACKGROUND_PICK)
             pickBgPref?.setOnPreferenceClickListener {
-                pickMediaLauncher.launch("image/*")
+                pickMediaLauncher.launch(arrayOf("image/*", "video/*"))
                 true
             }
+            val storedBg = MmkvManager.decodeSettingsString(AppConfig.PREF_CUSTOM_BACKGROUND_URI)
+            pickBgPref?.summary = when {
+                storedBg.isNullOrBlank() -> "Нажмите, чтобы выбрать файл"
+                storedBg.startsWith("content://") -> "Видео / внешний файл"
+                else -> "Фото сохранено в приложении"
+            }
+
+            val blurBgPref = findPreference<SeekBarPreference>(AppConfig.PREF_CUSTOM_BACKGROUND_BLUR)
+            blurBgPref?.setOnPreferenceChangeListener { preference, newValue ->
+                val level = (newValue as? Int) ?: 0
+                preference.summary = blurSummary(level)
+                // Bake blur into a file once (not realtime)
+                Thread {
+                    com.v2ray.ang.util.BackgroundBlurHelper.ensureDisplayImage(
+                        requireContext().applicationContext,
+                        level
+                    )
+                }.start()
+                requireContext().toast("Размытие $level% — применится на главном экране")
+                true
+            }
+            blurBgPref?.summary = blurSummary(
+                MmkvManager.decodeSettingsInt(AppConfig.PREF_CUSTOM_BACKGROUND_BLUR, 0)
+            )
+
+            val customBgEnabled = findPreference<SwitchPreferenceCompat>(AppConfig.PREF_CUSTOM_BACKGROUND_ENABLED)
+            fun updateCustomBgPrefsEnabled(enabled: Boolean) {
+                pickBgPref?.isEnabled = enabled
+                blurBgPref?.isEnabled = enabled
+            }
+            updateCustomBgPrefsEnabled(
+                MmkvManager.decodeSettingsBool(AppConfig.PREF_CUSTOM_BACKGROUND_ENABLED, false)
+            )
+            customBgEnabled?.setOnPreferenceChangeListener { _, newValue ->
+                updateCustomBgPrefsEnabled(newValue as Boolean)
+                true
+            }
+
+            // Theme picker disabled — force dark
+            findPreference<ListPreference>(AppConfig.PREF_UI_MODE_NIGHT)?.apply {
+                isEnabled = false
+                isSelectable = false
+                value = "2"
+                summary = "Временно недоступно — используется тёмная тема"
+            }
+
+            setupCustomFontPreferences()
 
             initPreferenceSummaries()
 
@@ -142,7 +244,7 @@ class SettingsActivity : BaseActivity() {
         }
 
         private fun initPreferenceSummaries() {
-            fun updateSummary(pref: androidx.preference.Preference) {
+            fun updateSummary(pref: Preference) {
                 when (pref) {
                     is EditTextPreference -> {
                         if (pref.key == AppConfig.PREF_SOCKS_PASSWORD) {
@@ -161,6 +263,8 @@ class SettingsActivity : BaseActivity() {
                     }
 
                     is ListPreference -> {
+                        // Custom font has its own change listener / summary
+                        if (pref.key == AppConfig.PREF_CUSTOM_FONT) return
                         pref.summary = pref.entry ?: ""
                         pref.setOnPreferenceChangeListener { p, newValue ->
                             val lp = p as ListPreference
@@ -278,6 +382,72 @@ class SettingsActivity : BaseActivity() {
         private fun updateHevTunSettings(enabled: Boolean) {
             hevTunLogLevel?.isEnabled = enabled
             hevTunRwTimeout?.isEnabled = enabled
+        }
+
+        private fun blurSummary(level: Int): String {
+            val value = level.coerceIn(0, 100)
+            return if (value == 0) {
+                "Без размытия"
+            } else {
+                "Уровень: $value"
+            }
+        }
+
+        private fun setupCustomFontPreferences() {
+            val fontPref = findPreference<ListPreference>(AppConfig.PREF_CUSTOM_FONT)
+            val pickFontPref = findPreference<Preference>(AppConfig.PREF_CUSTOM_FONT_PICK)
+
+            pickFontLauncher = registerForActivityResult(
+                ActivityResultContracts.OpenDocument()
+            ) { uri: Uri? ->
+                if (uri == null) return@registerForActivityResult
+                val path = AppFontHelper.importCustomFont(requireContext(), uri)
+                if (path != null) {
+                    val name = MmkvManager.decodeSettingsString(AppConfig.PREF_CUSTOM_FONT_NAME)
+                    fontPref?.value = AppFontHelper.FONT_CUSTOM
+                    updateFontSummaries()
+                    requireContext().toast("Шрифт сохранён: ${name ?: "custom"}. Перезапустите приложение.")
+                } else {
+                    requireContext().toastError("Не удалось загрузить шрифт (.ttf / .otf)")
+                }
+            }
+
+            pickFontPref?.setOnPreferenceClickListener {
+                pickFontLauncher.launch(fontMimeTypes)
+                true
+            }
+
+            fontPref?.setOnPreferenceChangeListener { _, newValue ->
+                val key = newValue as? String ?: AppFontHelper.FONT_RUSSO_ONE
+                if (key == AppFontHelper.FONT_CUSTOM) {
+                    val path = MmkvManager.decodeSettingsString(AppConfig.PREF_CUSTOM_FONT_PATH)
+                    if (path.isNullOrBlank()) {
+                        pickFontLauncher.launch(fontMimeTypes)
+                        return@setOnPreferenceChangeListener false
+                    }
+                }
+                MmkvManager.encodeSettings(AppConfig.PREF_CUSTOM_FONT, key)
+                AppFontHelper.invalidateCache()
+                updateFontSummaries()
+                requireContext().toast("Шрифт сохранён. Перезапустите приложение.")
+                true
+            }
+
+            updateFontSummaries()
+        }
+
+        private fun updateFontSummaries() {
+            val fontPref = findPreference<ListPreference>(AppConfig.PREF_CUSTOM_FONT)
+            val pickFontPref = findPreference<Preference>(AppConfig.PREF_CUSTOM_FONT_PICK)
+            val key = AppFontHelper.currentFontKey()
+            val customName = MmkvManager.decodeSettingsString(AppConfig.PREF_CUSTOM_FONT_NAME)
+
+            fontPref?.summary = AppFontHelper.displayName(key, customName)
+            pickFontPref?.summary = if (!customName.isNullOrBlank()) {
+                "Загружен: $customName\nТребуется перезапуск"
+            } else {
+                "Файл .ttf / .otf\nТребуется перезапуск"
+            }
         }
     }
 

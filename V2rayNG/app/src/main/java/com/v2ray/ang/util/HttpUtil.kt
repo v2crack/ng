@@ -21,6 +21,11 @@ import java.io.InputStream
 import java.io.ByteArrayOutputStream
 import java.io.ByteArrayInputStream
 
+data class HttpContentResult(
+    val content: String,
+    val headers: Map<String, String>
+)
+
 object HttpUtil {
 
     /**
@@ -177,6 +182,20 @@ object HttpUtil {
      */
     @Throws(IOException::class)
     fun getUrlContentWithUserAgent(url: String?, userAgent: String?, timeout: Int = 15000, httpPort: Int = 0): String {
+        return getUrlContentWithUserAgentAndHeaders(url, userAgent, timeout, httpPort).content
+    }
+
+    /**
+     * Retrieves URL content and response headers (case-insensitive header map).
+     * Multi-value headers are joined with a comma.
+     */
+    @Throws(IOException::class)
+    fun getUrlContentWithUserAgentAndHeaders(
+        url: String?,
+        userAgent: String?,
+        timeout: Int = 15000,
+        httpPort: Int = 0
+    ): HttpContentResult {
         var currentUrl = url
         var redirects = 0
         val maxRedirects = 3
@@ -189,10 +208,10 @@ object HttpUtil {
             if (!userAgent.isNullOrBlank()) {
                 conn.setRequestProperty("User-agent", userAgent)
             }
-            
+
             // Добавляем поддержку gzip в запрос
             conn.setRequestProperty("Accept-Encoding", "gzip")
-            
+
             conn.connect()
 
             val responseCode = conn.responseCode
@@ -208,8 +227,14 @@ object HttpUtil {
                 }
 
                 else -> try {
-                    // Используем функцию для чтения ответа с поддержкой gzip
-                    return readResponse(conn)
+                    val headers = mutableMapOf<String, String>()
+                    conn.headerFields?.forEach { (key, values) ->
+                        if (key != null && values != null) {
+                            headers[key.lowercase()] = values.joinToString(",")
+                        }
+                    }
+                    val content = readResponse(conn)
+                    return HttpContentResult(content, headers)
                 } finally {
                     conn.disconnect()
                 }

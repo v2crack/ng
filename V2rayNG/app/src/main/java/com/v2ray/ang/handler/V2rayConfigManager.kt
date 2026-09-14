@@ -142,14 +142,14 @@ object V2rayConfigManager {
         val result = ConfigResult(false)
 
         val serverList = MmkvManager.decodeAllServerList()
+        val resolvedSubId = resolvePolicyGroupSubscriptionId(config.policyGroupSubscriptionId)
         val configList = serverList
             .mapNotNull { id -> MmkvManager.decodeServerConfig(id) }
             .filter { profile ->
-                val subscriptionId = config.policyGroupSubscriptionId
-                if (subscriptionId.isNullOrBlank()) {
+                if (resolvedSubId.isNullOrBlank()) {
                     true
                 } else {
-                    profile.subscriptionId == subscriptionId
+                    profile.subscriptionId == resolvedSubId
                 }
             }
             .filter { profile ->
@@ -172,6 +172,21 @@ object V2rayConfigManager {
         result.guid = guid
 
         return result
+    }
+
+    /**
+     * Resolves policy-group subscription reference to an internal GUID.
+     * Accepts either a GUID or an exact group name (remarks).
+     */
+    private fun resolvePolicyGroupSubscriptionId(ref: String?): String? {
+        if (ref.isNullOrBlank()) return null
+        val subscriptions = MmkvManager.decodeSubscriptions()
+        subscriptions.firstOrNull { it.guid == ref }?.let { return it.guid }
+        subscriptions.firstOrNull { it.subscription.remarks == ref }?.let { return it.guid }
+        subscriptions.firstOrNull {
+            it.subscription.remarks.equals(ref, ignoreCase = true)
+        }?.let { return it.guid }
+        return ref
     }
 
     /**

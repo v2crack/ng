@@ -6,7 +6,7 @@ plugins {
 
 // Функция для чтения версии из файла
 fun getVersionFromFile(): String {
-    val versionFile = file(System.getProperty("user.home") + "/v2rayNG-2.0.9/V2rayNG/version.txt")
+    val versionFile = file("../version.txt")
     return if (versionFile.exists()) {
         versionFile.readText().trim()
     } else {
@@ -17,17 +17,17 @@ fun getVersionFromFile(): String {
 
 android {
     namespace = "com.v2ray.ang"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "org.v2rayng.crack"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 709
         versionName = "b5"
         multiDexEnabled = true
 
-        val abiFilterList = (properties["ABI_FILTERS"] as? String)?.split(';')
+        val abiFilterList = providers.gradleProperty("ABI_FILTERS").orNull?.split(';')
 	splits {
 		abi {
 			isEnable = true
@@ -43,6 +43,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -179,6 +180,6 @@ dependencies {
     coreLibraryDesugaring(libs.desugar.jdk.libs)
     
     // Keep Android Open
-    implementation("com.github.woheller69:FreeDroidWarn:V1.+")
+    implementation("com.github.woheller69:FreeDroidWarn:V1.13")
  
 }

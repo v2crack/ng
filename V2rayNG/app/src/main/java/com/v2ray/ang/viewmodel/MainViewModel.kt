@@ -267,7 +267,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             groups.add(
                 GroupMapItem(
                     id = "",
-                    remarks = context.getString(R.string.filter_config_all)
+                    remarks = context.getString(R.string.filter_config_all),
+                    isPermanent = false
                 )
             )
         }
@@ -275,7 +276,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             groups.add(
                 GroupMapItem(
                     id = sub.guid,
-                    remarks = sub.subscription.remarks
+                    remarks = sub.subscription.remarks,
+                    isPermanent = sub.subscription.isPermanent
                 )
             )
         }

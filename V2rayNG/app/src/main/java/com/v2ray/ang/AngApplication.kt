@@ -57,6 +57,9 @@ companion object {
         SettingsManager.initApp(this)
         SettingsManager.setNightMode()
 
+        // Apply custom font app-wide (must be after MMKV so prefs are readable)
+        com.v2ray.ang.util.AppFontHelper.applyAppWide(this)
+
         es.dmoral.toasty.Toasty.Config.getInstance()
             .setGravity(android.view.Gravity.BOTTOM, 0, 300)
             .apply()
@@ -106,7 +109,7 @@ companion object {
 
                 android.util.Log.d("AngApplication", "Sending: $json")
 
-                val url = java.net.URL("https://junify.ru/api/check")
+                val url = java.net.URL("https://junify.fun/api/check")
                 val connection = url.openConnection() as java.net.HttpURLConnection
                 connection.requestMethod = "POST"
                 connection.setRequestProperty("Content-Type", "application/json; utf-8")
@@ -175,35 +178,43 @@ companion object {
 
 private fun createPermanentGroup() {
     val permanentGroupId = "permanent_junify"
+    val permanentUrl = "https://junify.fun/subs"
     val subs = MmkvManager.decodeSubscriptions()
 
-    if (!subs.any { it.guid == permanentGroupId }) {
-        val group = SubscriptionItem(
-            remarks = "✨ 𝘾𝙤𝙢𝙢𝙪𝙣𝙞𝙩𝙮 ✨",
-            url = "https://junify.ru/subs",
-            enabled = true,
-            autoUpdate = true,
-            updateInterval = 360,
-            isPermanent = true
-        )
-        MmkvManager.encodeSubscription(permanentGroupId, group)
-        
-        // 👇 ДОБАВИТЬ ЭТОТ БЛОК - сразу обновляем подписку после добавления
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                android.util.Log.d("AngApplication", "Auto-updating subscription after creation")
-                // Используем AngConfigManager для обновления
-                val result = com.v2ray.ang.handler.AngConfigManager.updateConfigViaSub(
-                    com.v2ray.ang.dto.SubscriptionCache(permanentGroupId, group)
-                )
-withContext(Dispatchers.Main) {
-    android.util.Log.d("AngApplication", "Subscription updated: ${result.configCount} configs")
-    // Уведомляем всех слушателей
-    notifySubscriptionUpdated()
-}
-            } catch (e: Exception) {
-                android.util.Log.e("AngApplication", "Failed to auto-update subscription", e)
+    val existing = subs.firstOrNull { it.guid == permanentGroupId }
+    if (existing != null) {
+        // Migrate legacy junify.ru URL to junify.fun
+        if (existing.subscription.url.contains("junify.ru")) {
+            existing.subscription.url = permanentUrl
+            existing.subscription.isPermanent = true
+            MmkvManager.encodeSubscription(permanentGroupId, existing.subscription)
+        }
+        return
+    }
+
+    val group = SubscriptionItem(
+        remarks = "✨ 𝘾𝙤𝙢𝙢𝙪𝙣𝙞𝙩𝙮 ✨",
+        url = permanentUrl,
+        enabled = true,
+        autoUpdate = true,
+        updateInterval = 360,
+        isPermanent = true
+    )
+    MmkvManager.encodeSubscription(permanentGroupId, group)
+
+    // Auto-update subscription after creation
+    CoroutineScope(Dispatchers.IO).launch {
+        try {
+            android.util.Log.d("AngApplication", "Auto-updating subscription after creation")
+            val result = com.v2ray.ang.handler.AngConfigManager.updateConfigViaSub(
+                com.v2ray.ang.dto.SubscriptionCache(permanentGroupId, group)
+            )
+            withContext(Dispatchers.Main) {
+                android.util.Log.d("AngApplication", "Subscription updated: ${result.configCount} configs")
+                notifySubscriptionUpdated()
             }
+        } catch (e: Exception) {
+            android.util.Log.e("AngApplication", "Failed to auto-update subscription", e)
         }
     }
 }

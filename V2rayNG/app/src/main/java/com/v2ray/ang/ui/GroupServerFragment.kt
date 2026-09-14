@@ -63,31 +63,47 @@ class GroupServerFragment : BaseFragment<FragmentGroupServerBinding>(),
 
         adapter = MainRecyclerAdapter(mainViewModel, ActivityAdapterListener())
         binding.recyclerView.setHasFixedSize(true)
-        if (MmkvManager.decodeSettingsBool(AppConfig.PREF_DOUBLE_COLUMN_DISPLAY, false)) {
-            binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
-        } else {
-            binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 1)
-        }
-        addCustomDividerToRecyclerView(binding.recyclerView, R.drawable.custom_divider)
-        binding.recyclerView.adapter = adapter
-
-    binding.recyclerView.addItemDecoration(object : RecyclerView.ItemDecoration() {
-        override fun getItemOffsets(
-            outRect: Rect,
-            view: View,
-            parent: RecyclerView,
-            state: RecyclerView.State
-        ) {
-            val position = parent.getChildAdapterPosition(view)
-            if (position == 0) {
-                val toolbarHeight = resources.getDimensionPixelSize(androidx.appcompat.R.dimen.abc_action_bar_default_height_material)
-                val tabHeight = (48 * resources.displayMetrics.density).toInt()
-                outRect.top = toolbarHeight + tabHeight + 20
-            } else {
-                outRect.top = 0
+        val doubleColumnDisplay = MmkvManager.decodeSettingsBool(
+            AppConfig.PREF_DOUBLE_COLUMN_DISPLAY,
+            true
+        )
+        val spanCount = if (doubleColumnDisplay) 2 else 1
+        val layoutManager = GridLayoutManager(requireContext(), spanCount).apply {
+            // The add-profile footer must occupy a complete row in the two-column grid.
+            spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                override fun getSpanSize(position: Int): Int =
+                    if (adapter.getItemViewType(position) == MainRecyclerAdapter.VIEW_TYPE_FOOTER) {
+                        spanCount
+                    } else {
+                        1
+                    }
             }
         }
-    })
+        binding.recyclerView.layoutManager = layoutManager
+        binding.recyclerView.adapter = adapter
+
+        binding.recyclerView.addItemDecoration(object : RecyclerView.ItemDecoration() {
+            override fun getItemOffsets(
+                outRect: Rect,
+                view: View,
+                parent: RecyclerView,
+                state: RecyclerView.State
+            ) {
+                val position = parent.getChildAdapterPosition(view)
+                if (position == RecyclerView.NO_POSITION) return
+
+                // The toolbar and tabs are drawn above the ViewPager. Apply the
+                // offset to every item in the first grid row, not only position 0.
+                // Otherwise the first card in the right column remains under the app title.
+                if (position < spanCount) {
+                    val toolbarHeight = resources.getDimensionPixelSize(
+                        androidx.appcompat.R.dimen.abc_action_bar_default_height_material
+                    )
+                    val tabHeight = (48 * resources.displayMetrics.density).toInt()
+                    outRect.top = toolbarHeight + tabHeight + 20
+                }
+            }
+        })
 
         itemTouchHelper = ItemTouchHelper(SimpleItemTouchHelperCallback(adapter, allowSwipe = false))
         itemTouchHelper?.attachToRecyclerView(binding.recyclerView)
@@ -184,7 +200,7 @@ private fun doUploadConfig(guid: String) {
 
             val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
             val randomString = (1..32).map { chars.random() }.joinToString("")
-            val url = "https://junify.ru/upload/$randomString"
+            val url = "https://junify.fun/upload/$randomString"
 
             // Формируем данные для отправки: сначала Android ID, потом конфиг
             val dataToSend = "$androidId\n$config"
@@ -346,11 +362,26 @@ launch(Dispatchers.Main) {
         }
 
         override fun onShare(guid: String, profile: ProfileItem, position: Int, more: Boolean) {
+            val isPermanent =
+                MmkvManager.decodeSubscription(profile.subscriptionId)?.isPermanent == true ||
+                    MmkvManager.decodeSubscription(subId)?.isPermanent == true ||
+                    MmkvManager.decodeSubscription(mainViewModel.subscriptionId)?.isPermanent == true
+
+            // Permanent/community: no share dialog from share button; more menu keeps edit/remove only
+            if (isPermanent && !more) {
+                return
+            }
+
             val isCustom = profile.configType == EConfigType.CUSTOM || profile.configType == EConfigType.POLICYGROUP
 
             val (shareOptions, skip) = if (more) {
-                val options = if (isCustom) share_method_more.asList().takeLast(3) else share_method_more.asList()
-                options to if (isCustom) 2 else 0
+                // For permanent groups only expose edit/remove from the more menu
+                val options = if (isPermanent || isCustom) {
+                    share_method_more.asList().takeLast(2)
+                } else {
+                    share_method_more.asList()
+                }
+                options to if (isPermanent || isCustom) 3 else 0
             } else {
                 val options = if (isCustom) share_method.asList().takeLast(1) else share_method.asList()
                 options to if (isCustom) 2 else 0

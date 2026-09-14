@@ -158,6 +158,20 @@
         <item>bqi-rIR</item>
     </string-array>
 
+    <string-array name="custom_font_entries" translatable="false">
+        <item>Russo One (текущий)</item>
+        <item>Google Sans</item>
+        <item>Системный</item>
+        <item>Свой шрифт</item>
+    </string-array>
+
+    <string-array name="custom_font_values" translatable="false">
+        <item>russoone</item>
+        <item>google_sans</item>
+        <item>system</item>
+        <item>custom</item>
+    </string-array>
+
     <string-array name="mux_xudp_quic_value" translatable="false">
         <item>reject</item>
         <item>allow</item>

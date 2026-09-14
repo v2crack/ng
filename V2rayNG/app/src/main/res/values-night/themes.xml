@@ -6,8 +6,7 @@
         <!-- Night mode specific overrides -->
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
-        <item name="android:fontFamily">@font/russoone</item>
-        <item name="fontFamily">@font/russoone</item>
+        <!-- Font is applied at runtime via AppFontHelper (default: Russo One) -->
         <item name="alertDialogTheme">@style/RoundedAlertDialog</item>
     </style>
     <style name="RoundedAlertDialog" parent="Theme.Material3.DayNight.Dialog.Alert">

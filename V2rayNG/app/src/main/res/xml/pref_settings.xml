@@ -28,6 +28,11 @@
             android:summary="@string/summary_pref_group_all_display"
             android:title="@string/title_pref_group_all_display" />
 
+        <SwitchPreferenceCompat
+            android:key="pref_group_count_display"
+            android:defaultValue="false"
+            android:title="Показывать число профилей в группах" />
+
         <ListPreference
             android:defaultValue="auto"
             android:entries="@array/language_select"
@@ -37,12 +42,14 @@
             android:title="@string/title_language" />
 
         <ListPreference
-            android:defaultValue="0"
+            android:defaultValue="2"
             android:entries="@array/ui_mode_night"
             android:entryValues="@array/ui_mode_night_value"
             android:key="pref_ui_mode_night"
-            android:summary="%s"
-            android:title="@string/title_pref_ui_mode_night" />
+            android:title="@string/title_pref_ui_mode_night"
+            android:summary="Временно недоступно — используется тёмная тема"
+            android:enabled="false"
+            android:selectable="false" />
 
     </PreferenceCategory>
 
@@ -57,6 +64,40 @@
         android:key="pref_custom_background_pick"
         android:title="Выбрать фото или видео"
         android:summary="Нажмите, чтобы выбрать файл" />
+
+    <SeekBarPreference
+        android:key="pref_custom_background_blur"
+        android:title="Размытие фона"
+        android:summary="Применится к фото и сохранится в файлах приложения"
+        android:max="100"
+        android:defaultValue="0"
+        app:min="0"
+        app:showSeekBarValue="true"
+        app:updatesContinuously="false" />
+
+</PreferenceCategory>
+
+<PreferenceCategory android:title="Кастомный шрифт">
+
+    <ListPreference
+        android:key="pref_custom_font"
+        android:title="Шрифт приложения"
+        android:summary="%s"
+        android:entries="@array/custom_font_entries"
+        android:entryValues="@array/custom_font_values"
+        android:defaultValue="russoone" />
+
+    <Preference
+        android:key="pref_custom_font_pick"
+        android:title="Добавить свой шрифт"
+        android:summary="Файл .ttf / .otf" />
+
+    <Preference
+        android:key="pref_custom_font_restart_hint"
+        android:title="Требуется перезапуск"
+        android:summary="Шрифт применится после полного перезапуска приложения"
+        android:selectable="false"
+        android:enabled="false" />
 
 </PreferenceCategory>
 

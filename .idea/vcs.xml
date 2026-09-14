@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$/build/hev-socks5-tunnel-fresh" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/hev-socks5-tunnel-fresh/src/core" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/hev-socks5-tunnel-fresh/third-part/hev-task-system" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/hev-socks5-tunnel-fresh/third-part/lwip" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/hev-socks5-tunnel-fresh/third-part/yaml" vcs="Git" />
+  </component>
+</project>

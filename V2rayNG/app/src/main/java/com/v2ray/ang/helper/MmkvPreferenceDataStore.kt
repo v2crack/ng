@@ -72,16 +72,35 @@ class MmkvPreferenceDataStore : PreferenceDataStore() {
         return MmkvManager.decodeSettingsStringSet(key) ?: defaultValues
     }
 
+    // UI-only prefs: no VPN restart / tab rebuild needed
+    private val uiOnlyPrefs = setOf(
+        AppConfig.PREF_CUSTOM_BACKGROUND_ENABLED,
+        AppConfig.PREF_CUSTOM_BACKGROUND_URI,
+        AppConfig.PREF_CUSTOM_BACKGROUND_PICK,
+        AppConfig.PREF_CUSTOM_BACKGROUND_BLUR,
+        AppConfig.PREF_CUSTOM_FONT,
+        AppConfig.PREF_CUSTOM_FONT_PATH,
+        AppConfig.PREF_CUSTOM_FONT_NAME,
+        AppConfig.PREF_CUSTOM_FONT_PICK,
+        AppConfig.PREF_UI_MODE_NIGHT,
+        AppConfig.PREF_LANGUAGE,
+        AppConfig.PREF_LOGLEVEL,
+    )
+
     // Internal helper: notify other modules about setting changes
     private fun notifySettingChanged(key: String) {
         if (key == AppConfig.PREF_LOGLEVEL) {
             LogUtil.refreshLogLevel()
         }
 
-        // Call SettingsManager.setNightMode if UI mode changed
+        // Theme is locked to dark — ignore UI mode changes from prefs
         if (key == AppConfig.PREF_UI_MODE_NIGHT) {
             SettingsManager.setNightMode()
+            return
         }
+
+        if (key in uiOnlyPrefs) return
+
         // Notify listeners that require service restart or reinit
         SettingsChangeManager.makeRestartService()
         SettingsChangeManager.makeSetupGroupTab()

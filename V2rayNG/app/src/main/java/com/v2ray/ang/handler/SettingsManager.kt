@@ -431,13 +431,14 @@ fun getPingThreads(): Int {
     }
 
     /**
-     * Set night mode.
+     * Force dark theme. Light / follow-system temporarily disabled (missing light resources).
      */
     fun setNightMode() {
-        when (MmkvManager.decodeSettingsString(AppConfig.PREF_UI_MODE_NIGHT, "0")) {
-            "0" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-            "1" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            "2" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        // Always dark — light theme selection is disabled in settings.
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        // Keep stored pref consistent so UI summary stays on "Dark"
+        if (MmkvManager.decodeSettingsString(AppConfig.PREF_UI_MODE_NIGHT) != "2") {
+            MmkvManager.encodeSettings(AppConfig.PREF_UI_MODE_NIGHT, "2")
         }
     }
 

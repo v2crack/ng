@@ -53,6 +53,24 @@
         <!-- Status bar and navigation bar - system bars -->
         <item name="android:statusBarColor">@color/md_theme_surface</item>
         <item name="android:navigationBarColor">@color/md_theme_surface</item>
+
+        <!-- Material 3 switches inside AndroidX Preference -->
+        <item name="preferenceTheme">@style/AppPreferenceThemeOverlay</item>
+
+        <!--
+            Do not set fontFamily here: an explicit @font/russoone resource takes
+            precedence over the runtime Typeface selected in AppFontHelper.
+            The helper applies Russo One when no different saved font is selected.
+        -->
+    </style>
+
+    <style name="AppPreferenceThemeOverlay" parent="@style/PreferenceThemeOverlay">
+        <item name="switchPreferenceCompatStyle">@style/AppSwitchPreference</item>
+    </style>
+
+    <style name="AppSwitchPreference" parent="@style/Preference.SwitchPreferenceCompat.Material">
+        <item name="android:widgetLayout">@layout/preference_material_switch</item>
+        <item name="widgetLayout">@layout/preference_material_switch</item>
     </style>
 
     <!-- Day/Night theme: inherit common values and set light-mode-specific items -->
@@ -60,6 +78,16 @@
         <!-- day/night-specific overrides (light/default) -->
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
+        <!-- Must also exist in light resources (was night-only → crash on light theme) -->
+        <item name="alertDialogTheme">@style/RoundedAlertDialog</item>
+    </style>
+
+    <style name="RoundedAlertDialog" parent="Theme.Material3.DayNight.Dialog.Alert">
+        <item name="android:windowBackground">@drawable/dialog_rounded_background</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:windowMinWidthMajor">85%</item>
+        <item name="android:windowMinWidthMinor">85%</item>
     </style>
 
     <!-- Theme without ActionBar -->
